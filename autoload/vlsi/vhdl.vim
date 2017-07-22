@@ -1,4 +1,13 @@
-"Parse Vlsi around cursor
+" helper function to define keyword case
+function ChangeCase(str)
+    if exists('g:vlsi_vhdl_uppercase') && g:vlsi_vhdl_uppercase == 1
+        return toupper(a:str)
+    else
+        return a:str
+    endif 
+endfunction
+
+"Parse entity around cursor
 function! vlsi#vhdl#Yank() abort
   if !exists('g:modules')
     let g:modules = {}
@@ -47,7 +56,7 @@ function! vlsi#vhdl#Yank() abort
         echo 'Entity capture abandoned!'
         return
       endif
-      let rangelist = matchlist(linelist[3],'\c^vector\s*(\s*\(\d\+\)\s*\w\+\s*\(\d\+\)')
+      let rangelist = matchlist(linelist[3],'\cvector\s*(\s*\(\d\+\)\s*\w\+\s*\(\d\+\)')
       if !empty(rangelist)
         let range = rangelist[1] . ":" . rangelist[2]
       else
@@ -70,15 +79,15 @@ function! vlsi#vhdl#PasteAsEntity(name)
   endif
   let lnum = line('.')
   if has_key(g:modules, name)
-    call append(lnum, 'ENTITY ' . name . ' IS') 
+    call append(lnum, ChangeCase('entity ') . name . ChangeCase(' is')) 
     let lnum = lnum + 1
     if !empty(g:modules[name].generics)
-      call append(lnum, '  GENERIC (')
+      call append(lnum, ChangeCase('  generic ('))
       let lnum = lnum + 1
       let arglist = []
       let keynum = 0
       for item in g:modules[name].generics
-        let arglist += [ '    ' . item.name . ' : ' . item.type . ' := ' . item.value . ' ;' ]
+        let arglist += [ '    ' . item.name . ' : ' . ChangeCase(item.type) . ' := ' . item.value . ' ;' ]
         let keynum = keynum + 1
       endfor
       let arglist[-1] = arglist[-1][:-3]
@@ -88,21 +97,21 @@ function! vlsi#vhdl#PasteAsEntity(name)
       let lnum = lnum + 1
     endif
     if !empty(g:modules[name].ports)
-      call append(lnum, '  PORT (')
+      call append(lnum, ChangeCase('  port ('))
       let lnum = lnum + 1
       let arglist = []
       let keynum = 0
       for item in g:modules[name].ports
         if item.dir == 'i'
-          let dir = 'IN '
+          let dir = ChangeCase('in ')
         else
-          let dir = 'OUT'
+          let dir = ChangeCase('out')
         endif
         let rangelist = matchlist(item.range, '\(\d\+\):\(\d\+\)')
         if !empty(rangelist)
-          let type = 'STD_LOGIC_VECTOR(' . rangelist[1] . ' DOWNTO ' . rangelist[0] . ')'
+          let type = ChangeCase('std_logic_vector(') . rangelist[1] . ChangeCase(' downto ') . rangelist[2] . ')'
         else
-          let type = 'STD_LOGIC'
+          let type = ChangeCase('std_logic')
         endif
         let arglist += [ '    ' . item.name . ' : ' . dir . ' ' . type . ' ;' ]
         let keynum = keynum + 1
@@ -113,7 +122,7 @@ function! vlsi#vhdl#PasteAsEntity(name)
       call append(lnum, '  );')
       let lnum = lnum + 1
     endif
-    call append(lnum, 'END ' . name . ';')
+    call append(lnum, ChangeCase('end ') . name . ';')
   else
     echo 'Unknown entity ' . name . '!'
   endif
@@ -130,15 +139,15 @@ function! vlsi#vhdl#PasteAsComponent(name)
   endif
   let lnum = line('.')
   if has_key(g:modules, name)
-    call append(lnum, '  COMPONENT ' . name) 
+    call append(lnum, ChangeCase('  component ') . name) 
     let lnum = lnum + 1
     if !empty(g:modules[name].generics)
-      call append(lnum, '    GENERIC (')
+      call append(lnum, ChangeCase('    generic ('))
       let lnum = lnum + 1
       let arglist = []
       let keynum = 0
       for item in g:modules[name].generics
-        let arglist += [ '      ' . item.name . ' : ' . item.type . ' := ' . item.value . ' ;' ]
+        let arglist += [ '      ' . item.name . ' : ' . ChangeCase(item.type) . ' := ' . item.value . ' ;' ]
         let keynum = keynum + 1
       endfor
       let arglist[-1] = arglist[-1][:-3]
@@ -148,21 +157,21 @@ function! vlsi#vhdl#PasteAsComponent(name)
       let lnum = lnum + 1
     endif
     if !empty(g:modules[name].ports)
-      call append(lnum, '    PORT (')
+      call append(lnum, ChangeCase('    port ('))
       let lnum = lnum + 1
       let arglist = []
       let keynum = 0
       for item in g:modules[name].ports
         if item.dir == 'i'
-          let dir = 'IN '
+          let dir = ChangeCase('in ')
         else
-          let dir = 'OUT'
+          let dir = ChangeCase('out')
         endif
         let rangelist = matchlist(item.range, '\(\d\+\):\(\d\+\)')
         if !empty(rangelist)
-          let type = 'STD_LOGIC_VECTOR(' . rangelist[1] . ' DOWNTO ' . rangelist[0] . ')'
+          let type = ChangeCase('std_logic_vector(') . rangelist[1] . ChangeCase(' downto ') . rangelist[2] . ')'
         else
-          let type = 'STD_LOGIC'
+          let type = ChangeCase('std_logic')
         endif
         let arglist += [ '      ' . item.name . ' : ' . dir . ' ' . type . ' ;' ]
         let keynum = keynum + 1
@@ -173,7 +182,7 @@ function! vlsi#vhdl#PasteAsComponent(name)
       call append(lnum, '  );')
       let lnum = lnum + 1
     endif
-    call append(lnum, '  END COMPONENT;')
+    call append(lnum, ChangeCase('  end component;'))
   else
     echo 'Unknown entity ' . name . '!'
   endif
@@ -193,7 +202,7 @@ function! vlsi#vhdl#PasteAsInstance(name)
     call append(lnum, '  I_' . name . ' : ' . name) 
     let lnum = lnum + 1
     if !empty(g:modules[name].generics)
-      call append(lnum, '    GENERIC MAP (')
+      call append(lnum, ChangeCase('    generic map ('))
       let lnum = lnum + 1
       let arglist = []
       let keynum = 0
@@ -208,7 +217,7 @@ function! vlsi#vhdl#PasteAsInstance(name)
       let lnum = lnum + 1
     endif
     if !empty(g:modules[name].ports)
-      call append(lnum, '    PORT MAP (')
+      call append(lnum, ChangeCase('    port map ('))
       let lnum = lnum + 1
       let arglist = []
       let keynum = 0

@@ -6,21 +6,33 @@ let g:entity_yank_paste = 1
 
 "Create plugin bindings
 function! vlsi#Bindings()
+  if !exists('b:VlsiYank')
+    let b:VlsiYank = function('vlsi#YankNotDefined')
+  endif
+  if !exists('b:VlsiPasteAsDefinition')
+    let b:VlsiPasteAsDefinition = function('vlsi#PasteAsDefinitionNotDefined')
+  endif
+  if !exists('b:VlsiPasteAsInterface')
+    let b:VlsiPasteAsInterface = function('vlsi#PasteAsInterfaceNotDefined')
+  endif
+  if !exists('b:VlsiPasteAsInstance')
+    let b:VlsiPasteAsInstance = function('vlsi#PasteAsInstanceNotDefined')
+  endif
   " Command-line mode
   command! -nargs=0 VlsiYank      :call b:VlsiYank()
   command! -nargs=? VlsiList      :echo join(vlsi#ListModules('<args>','',''),' ')
   command! -nargs=0 VlsiDefineNew :call vlsi#DefineNew()
-  command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsEntity    :call b:VlsiPasteAsEntity('<args>')
-  command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsComponent :call b:VlsiPasteAsComponent('<args>')
-  command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsInstance  :call b:VlsiPasteAsInstance('<args>')
+  command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition('<args>')
+  command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsInterface  :call b:VlsiPasteAsInterface('<args>')
+  command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsInstance   :call b:VlsiPasteAsInstance('<args>')
 
   " <Plug> Mappings
-  noremap <silent> <Plug>VlsiYank                    :call b:VlsiYank     ()<CR>
-  noremap <silent> <Plug>VlsiList                    :echo join(vlsi#ListModules('<args>','',''),' ')<CR>
-  noremap <silent> <Plug>VlsiDefineNew               :call vlsi#DefineNew ()<CR>
-  noremap <silent> <Plug>VlsiPasteAsEntity           :call b:VlsiPasteAsEntity   ('')<CR>
-  noremap <silent> <Plug>VlsiPasteAsComponent        :call b:VlsiPasteAsComponent('')<CR>
-  noremap <silent> <Plug>VlsiPasteAsInstance         :call b:VlsiPasteAsInstance ('')<CR>
+  noremap <silent> <Plug>VlsiYank              :call b:VlsiYank     ()<CR>
+  noremap <silent> <Plug>VlsiList              :echo join(vlsi#ListModules('<args>','',''),' ')<CR>
+  noremap <silent> <Plug>VlsiDefineNew         :call vlsi#DefineNew ()<CR>
+  noremap <silent> <Plug>VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition   ('')<CR>
+  noremap <silent> <Plug>VlsiPasteAsInterface  :call b:VlsiPasteAsInterface('')<CR>
+  noremap <silent> <Plug>VlsiPasteAsInstance   :call b:VlsiPasteAsInstance ('')<CR>
 
   " Default mappings
   if !hasmapto('<Plug>VlsiDefineNew') &&  maparg('<M-S-F6>','n') ==# ''
@@ -29,11 +41,11 @@ function! vlsi#Bindings()
   if !hasmapto('<Plug>VlsiYank') &&  maparg('<M-F6>','n') ==# ''
     nmap <M-F6>  <Plug>VlsiYank
   endif
-  if !hasmapto('<Plug>VlsiPasteAsEntity') &&  maparg('<S-F6>','n') ==# ''
-    nmap <S-F6>  <Plug>VlsiPasteAsEntity
+  if !hasmapto('<Plug>VlsiPasteAsDefinition') &&  maparg('<S-F6>','n') ==# ''
+    nmap <S-F6>  <Plug>VlsiPasteAsDefinition
   endif
-  if !hasmapto('<Plug>VlsiPasteAsComponent') &&  maparg('<C-F6>','n') ==# ''
-    nmap <C-F6>  <Plug>VlsiPasteAsComponent
+  if !hasmapto('<Plug>VlsiPasteAsInterface') &&  maparg('<C-F6>','n') ==# ''
+    nmap <C-F6>  <Plug>VlsiPasteAsInterface
   endif
   if !hasmapto('<Plug>VlsiPasteAsInstance') &&  maparg('<F6>','n') ==# ''
     nmap <F6>  <Plug>VlsiPasteAsInstance
@@ -85,4 +97,18 @@ function! vlsi#DefineNew() abort
   endwhile
   echo
   echo 'Module capture successful!'
+endfunction
+
+" Default function fallbacks when not defined for filetype
+function! vlsi#YankNotDefined(...)
+  echoerr 'VlsiYank command not defined for this filetype!'
+endfunction
+function! vlsi#PasteAsDefinitionNotDefined(...)
+  echoerr 'VlsiPasteAsDefinition command not defined for this filetype!'
+endfunction
+function! vlsi#PasteAsInterfaceNotDefined(...)
+  echoerr 'VlsiPasteAsInterface command not defined for this filetype!'
+endfunction
+function! vlsi#PasteAsInstanceNotDefined(...)
+  echoerr 'VlsiPasteAsInstance command not defined for this filetype!'
 endfunction

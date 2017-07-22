@@ -1,9 +1,10 @@
 :VlsiDefineNew	vlsi.txt	/*:VlsiDefineNew*
 :VlsiList	vlsi.txt	/*:VlsiList*
-:VlsiPasteAsComponent	vlsi.txt	/*:VlsiPasteAsComponent*
-:VlsiPasteAsEntity	vlsi.txt	/*:VlsiPasteAsEntity*
+:VlsiPasteAsDefinition	vlsi.txt	/*:VlsiPasteAsDefinition*
 :VlsiPasteAsInstance	vlsi.txt	/*:VlsiPasteAsInstance*
+:VlsiPasteAsInterface	vlsi.txt	/*:VlsiPasteAsInterface*
 :VlsiYank	vlsi.txt	/*:VlsiYank*
+g:vlsi_vhdl_uppercase	vlsi.txt	/*g:vlsi_vhdl_uppercase*
 vlsi-changelog	vlsi.txt	/*vlsi-changelog*
 vlsi-copyright	vlsi.txt	/*vlsi-copyright*
 vlsi-customization	vlsi.txt	/*vlsi-customization*
