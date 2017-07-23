@@ -36,6 +36,15 @@ Current supported filetypes:
 `:VlsiPasteAsInstance [{modulename}]  ` Paste module as bound instance.
                                        default mapping: `<F6>`
 
+## VLSI Tagbar plugin integration
+The VLSI plugin adds support for ctags-compatible tag file generation and
+corresponding configuration for the Tagbar plugin. for more information, see:
+
+Tagbar: a class outline viewer for Vim
+<https://github.com/majutsushi/tagbar>
+
+Currently, scoped tag generation is available only for VHDL.
+
 ## Authors:
 * Yvain Thonnart
 

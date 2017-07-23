@@ -17,7 +17,8 @@ Copyright: (c) 2009 - 2017 by the authors
         1. VLSI module yank & paste                            |vlsi-yank-paste|
         1.1 Commands                                  |vlsi-yank-paste-commands|
         1.2 Mappings                                  |vlsi-yank-paste-mappings|
-        2. Changelog                                            |vlsi-changelog|
+        2. VLSI Tagbar plugin integration                   |vlsi-tagbar-plugin|
+        3. Changelog                                            |vlsi-changelog|
 
 ==============================================================================
 1. VLSI module yank & paste                                    *vlsi-yank-paste*
@@ -185,7 +186,20 @@ in your .vimrc:
 let g:vlsi_vhdl_uppercase = 1
 
 ==============================================================================
-2. Changelog                                                    *vlsi-changelog*
+2. VLSI Tagbar plugin integration                           *vlsi-tagbar-plugin*
+
+The VLSI plugin adds support for ctags-compatible tag file generation and
+corresponding configuration for the Tagbar plugin. for more information, see:
+
+Tagbar: a class outline viewer for Vim
+<https://github.com/majutsushi/tagbar>
+
+and once installed, the corresponding plugin documentation in vim: |tagbar|
+
+Currently, scoped tag generation is available only for VHDL.
+
+==============================================================================
+3. Changelog                                                    *vlsi-changelog*
 
     0.2: Jul 21, 2017:  Wrapped in standalone vim plugin
     0.1: Oct 22, 2009:  First working version
