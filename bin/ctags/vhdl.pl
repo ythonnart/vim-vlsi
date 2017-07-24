@@ -72,9 +72,11 @@ while(<>) {
 
     } elsif ($kscope eq 'architecture' and /^\s*begin\b/i) { $scope_body=1;
 
-    } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*(?:((?:<[^>]*>)?(\w+)(?:\S*))\s*:\s*)?process\s*(\(.*\))?/i) { $name=$2?$2:"line$."; $kind='r';$sig="\tsignature: $3".(($1 eq $2)?"":": $1");
+    } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*(?:((?:<[^>]*>)?(\w+)(?:\S*))\s*:\s*(?:postponed\s*)?)?process\s*(\(.*\))?/i) { $name=$2?$2:"line$."; $kind='r';$sig="\tsignature: $3".(($1 eq $2)?"":": $1");
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
 
+    } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*(?:((?:<[^>]*>)?(\w+)(?:\S*))\s*:\s*)?(for|while|next|if|case|null|wait|return|exit|block|assert|report)\s*(\(.*\))?/i) {
+    
     } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*((?:<[^>]*>)?(\w+)(?:\S*))\s*:\s*((?:<[^>]*>)?(\w+)(?:\S*))/i) { $name=$2; $kind='i';$sig=" ($3)".(($1 eq $2)?"":": $1");
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
 
