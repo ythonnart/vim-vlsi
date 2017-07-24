@@ -1,6 +1,7 @@
 vim-vlsi : useful scripts for VLSI design
 =========================================
 
+## VLSI Module/Entity Yank & Paste
 The VLSI plugin defines module yank & paste, keeping a list of registered
 modules in memory.
 
@@ -17,7 +18,7 @@ Current supported filetypes:
 * VHDL
 
 
-## Commands
+### Commands
 `:VlsiYank                            ` Yank the module containing the cursor.
                                        default mapping: `<M-F6>`
 
