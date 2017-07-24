@@ -49,7 +49,7 @@ while(<>) {
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::generics$sig\n";
 
     } elsif (/^\s*port\s*\(/i) { $kind='p';
-    } elsif ($kscope eq 'entity' and $kind eq 'p' and /^\s*((?:<[^>]*>)?(\w+)(?:\S*))\s*:\s*(in|out)/i) { $name=$2;$sig="\tsignature: (".lc($3).")".(($1 eq $2)?"":": $1");
+    } elsif ($kscope eq 'entity' and $kind eq 'p' and /^\s*((?:<[^>]*>)?(\w+)(?:\S*))\s*:\s*(in|out|inout)/i) { $name=$2;$sig="\tsignature: (".lc($3).")".(($1 eq $2)?"":": $1");
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
 
     } elsif (/^\s*end\s+(entity\s+)?$curscope/i) { popscope(\$scope);
