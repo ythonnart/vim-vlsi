@@ -27,8 +27,7 @@ function! vlsi#vhdl#Yank() abort
   let modname = linelist[2]
   if has_key(g:modules,modname)
     if input('Entity ' . modname . ' exists! Overwrite (y/n)? ') != 'y'
-      echo
-      echo 'Entity capture abandoned!'
+      echo '    Entity capture abandoned!'
       return
     endif
   endif
@@ -53,7 +52,7 @@ function! vlsi#vhdl#Yank() abort
       elseif linelist[2] =~ '\c^o'
         let dir = 'o'
       else
-        echo 'Entity capture abandoned!'
+        echo '    Entity capture abandoned!'
         return
       endif
       let rangelist = matchlist(linelist[3],'\cvector\s*(\s*\(\d\+\)\s*\w\+\s*\(\d\+\)')
@@ -65,7 +64,7 @@ function! vlsi#vhdl#Yank() abort
       let g:modules[modname].ports += [ { 'name' : linelist[1], 'dir' : dir, 'range' : range } ]
     endif
   endfor
-  echo 'Entity capture successful!'
+  echo '    Capture for entity ' . modname . 'successful!'
 endfunction
 
 "Insert entity defined a:name as 'ENTITY'
@@ -75,7 +74,7 @@ function! vlsi#vhdl#PasteAsEntity(name)
   endif
   let name = a:name
   if name == ''
-      let name = input('Entity? ', '', 'customlist,vlsi#ListModules')
+      let name = input('Entity to paste as entity? ', '', 'customlist,vlsi#ListModules')
   endif
   let lnum = line('.')
   if has_key(g:modules, name)
@@ -124,7 +123,7 @@ function! vlsi#vhdl#PasteAsEntity(name)
     endif
     call append(lnum, ChangeCase('end ') . name . ';')
   else
-    echo 'Unknown entity ' . name . '!'
+    echo '    Unknown entity ' . name . '!'
   endif
 endfunction
 
@@ -135,7 +134,7 @@ function! vlsi#vhdl#PasteAsComponent(name)
   endif
   let name = a:name
   if name == ''
-      let name = input('Entity? ', '', 'customlist,vlsi#ListModules')
+      let name = input('Entity to paste as component? ', '', 'customlist,vlsi#ListModules')
   endif
   let lnum = line('.')
   if has_key(g:modules, name)
@@ -184,7 +183,7 @@ function! vlsi#vhdl#PasteAsComponent(name)
     endif
     call append(lnum, ChangeCase('  end component;'))
   else
-    echo 'Unknown entity ' . name . '!'
+    echo '    Unknown entity ' . name . '!'
   endif
 endfunction
 
@@ -195,7 +194,7 @@ function! vlsi#vhdl#PasteAsInstance(name)
   endif
   let name = a:name
   if name == ''
-      let name = input('Entity? ', '', 'customlist,vlsi#ListModules')
+      let name = input('Entity to paste as instance? ', '', 'customlist,vlsi#ListModules')
   endif
   let lnum = line('.')
   if has_key(g:modules, name)
@@ -232,6 +231,6 @@ function! vlsi#vhdl#PasteAsInstance(name)
       let lnum = lnum + 1
     endif
   else
-    echo 'Unknown entity ' . name . '!'
+    echo '    Unknown entity ' . name . '!'
   endif
 endfunction

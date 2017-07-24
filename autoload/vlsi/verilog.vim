@@ -18,8 +18,7 @@ function! vlsi#verilog#Yank() abort
   let modname = linelist[2]
   if has_key(g:modules,modname)
     if input('Module ' . modname . ' exists! Overwrite (y/n)? ') != 'y'
-      echo
-      echo 'Module capture abandoned!'
+      echo '    Module capture abandoned!'
       return
     endif
   endif
@@ -57,7 +56,7 @@ function! vlsi#verilog#Yank() abort
       let kind = -1
     endif
   endfor
-  echo 'Module capture successful!'
+  echo '    Capture for module ' . modname . 'successful!'
 endfunction
 
 "Insert entity defined a:name as 'module'
@@ -67,7 +66,7 @@ function! vlsi#verilog#PasteAsModule(name)
   endif
   let name = a:name
   if name == ''
-      let name = input('Module? ', '', 'customlist,vlsi#ListModules')
+      let name = input('Module to paste as module? ', '', 'customlist,vlsi#ListModules')
   endif
   let lnum = line('.')
   if has_key(g:modules, name)
@@ -119,7 +118,7 @@ function! vlsi#verilog#PasteAsModule(name)
     endif
     call append(lnum, 'endmodule')
   else
-    echo 'Unknown entity ' . name . '!'
+    echo '    Unknown entity ' . name . '!'
   endif
 endfunction
 
@@ -130,7 +129,7 @@ function! vlsi#verilog#PasteAsInstance(name)
   endif
   let name = a:name
   if name == ''
-      let name = input('Entity? ', '', 'customlist,vlsi#ListModules')
+      let name = input('Module to paste as instance? ', '', 'customlist,vlsi#ListModules')
   endif
   let lnum = line('.')
   if has_key(g:modules, name)
@@ -167,6 +166,6 @@ function! vlsi#verilog#PasteAsInstance(name)
       let lnum = lnum + 1
     endif
   else
-    echo 'Unknown entity ' . name . '!'
+    echo '    Unknown entity ' . name . '!'
   endif
 endfunction

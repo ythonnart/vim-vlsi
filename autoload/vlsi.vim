@@ -1,8 +1,8 @@
 " Only do this when not done yet for this buffer
-if exists("g:entity_yank_paste")
+if exists("g:vlsi_loaded")
   finish
 endif
-let g:entity_yank_paste = 1
+let g:vlsi_loaded = 1
 
 "Create plugin bindings
 function! vlsi#Bindings()
@@ -69,8 +69,7 @@ function! vlsi#DefineNew() abort
   let modname = input('Module name: ')
   if has_key(g:modules,modname)
     if input('Module exists! Overwrite (y/n)? ') != 'y'
-      echo
-      echo 'Module capture abandoned!'
+      echo '    Module capture abandoned!'
       return
     endif
   endif
@@ -95,8 +94,7 @@ function! vlsi#DefineNew() abort
     let g:modules[modname].ports += [ { 'name' : name, 'dir' : dir, 'range' : range } ]
     let name = input('New port name (leave empty if no more): ')
   endwhile
-  echo
-  echo 'Module capture successful!'
+  echo '    Capture for module ' . modname . 'successful!'
 endfunction
 
 " Default function fallbacks when not defined for filetype
