@@ -196,7 +196,7 @@ Tagbar: a class outline viewer for Vim
 
 and once installed, the corresponding plugin documentation in vim: |tagbar|
 
-Currently, scoped tag generation is available only for VHDL.
+Scoped tag generation is available for VHDL and Verilog.
 
 ==============================================================================
 3. Changelog                                                    *vlsi-changelog*

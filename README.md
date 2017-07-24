@@ -44,7 +44,7 @@ corresponding configuration for the Tagbar plugin. for more information, see:
 Tagbar: a class outline viewer for Vim
 <https://github.com/majutsushi/tagbar>
 
-Currently, scoped tag generation is available only for VHDL.
+Scoped tag generation is available for VHDL and Verilog.
 
 ## Authors:
 * Yvain Thonnart
