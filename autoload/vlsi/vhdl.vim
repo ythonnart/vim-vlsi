@@ -9,6 +9,8 @@ endfunction
 
 "Parse entity around cursor
 function! vlsi#vhdl#Yank() abort
+  let idregex  = '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
+  let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
   if !exists('g:modules')
     let g:modules = {}
   endif
@@ -19,7 +21,7 @@ function! vlsi#vhdl#Yank() abort
     echo 'Could not find entity or component around cursor!'
     return
   endif
-  let linelist = matchlist(getline(entbegin),'\c^\s*\(entity\|component\)\s*\(\w\+\)')
+  let linelist = matchlist(getline(entbegin),'\c^\s*\(entity\|component\)\s*\(' . idregex . '\)')
   if empty(linelist)
     echo 'No match to entity or component on line ' . entbegin . '!'
     return
@@ -40,12 +42,12 @@ function! vlsi#vhdl#Yank() abort
     if match(curline,'\cport') != -1
       let kind = 1
     endif
-    let linelist = matchlist(curline,'\c^\s*\(\w\+\)\s*:\s*\(.\{-}\S\)\s*\(\($\|;\|--\)\|:=\s*\(.\{-}\S\)\s*\($\|;\|--\)\)')
+    let linelist = matchlist(curline,'\c^\s*\(' . idregex . '\)\s*:\s*\(.\{-}\S\)\s*\(\($\|;\|--\)\|:=\s*\(.\{-}\S\)\s*\($\|;\|--\)\)')
     if kind == 0 && !empty(linelist)
       let linelist[2] = tolower(linelist[2])
       let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : linelist[2], 'value' : linelist[5] } ]
     endif
-    let linelist = matchlist(curline,'\c^\s*\(\w\+\)\s*:\s*\(\w\+\)\s*\(.\{-}\S\)\s*\($\|;\|--\)')
+    let linelist = matchlist(curline,'\c^\s*\(' . idregex . '\)\s*:\s*\(in\|out\|inout\)\s*\(.\{-}\S\)\s*\($\|;\|--\)')
     if kind == 1 && !empty(linelist)
       if linelist[2] =~ '\c^i'
         let dir = 'i'
@@ -55,9 +57,9 @@ function! vlsi#vhdl#Yank() abort
         echo '    Entity capture abandoned!'
         return
       endif
-      let rangelist = matchlist(linelist[3],'\cvector\s*(\s*\(\d\+\)\s*\w\+\s*\(\d\+\)')
+      let rangelist = matchlist(linelist[3],'\cvector\s*(\s*\(' . mixregex . '\)\s*downto\s*\(' . mixregex . '\)\s*)')
       if !empty(rangelist)
-        let range = rangelist[1] . ":" . rangelist[2]
+        let range = substitute(rangelist[1],'\s*$','','') . "{{:}}" . substitute(rangelist[2],'\s*$','','')
       else
         let range = 0
       endif
@@ -106,7 +108,7 @@ function! vlsi#vhdl#PasteAsEntity(name)
         else
           let dir = ChangeCase('out')
         endif
-        let rangelist = matchlist(item.range, '\(\d\+\):\(\d\+\)')
+        let rangelist = matchlist(item.range, '\(.*\){{:}}\(.*\)')
         if !empty(rangelist)
           let type = ChangeCase('std_logic_vector(') . rangelist[1] . ChangeCase(' downto ') . rangelist[2] . ')'
         else
@@ -166,7 +168,7 @@ function! vlsi#vhdl#PasteAsComponent(name)
         else
           let dir = ChangeCase('out')
         endif
-        let rangelist = matchlist(item.range, '\(\d\+\):\(\d\+\)')
+        let rangelist = matchlist(item.range, '\(.*\){{:}}\(.*\)')
         if !empty(rangelist)
           let type = ChangeCase('std_logic_vector(') . rangelist[1] . ChangeCase(' downto ') . rangelist[2] . ')'
         else

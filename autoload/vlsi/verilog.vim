@@ -1,5 +1,7 @@
 "Parse module around cursor
 function! vlsi#verilog#Yank() abort
+  let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
+  let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
   if !exists('g:modules')
     let g:modules = {}
   endif
@@ -10,7 +12,7 @@ function! vlsi#verilog#Yank() abort
     echo 'Could not find module around cursor!'
     return
   endif
-  let linelist = matchlist(getline(modbegin),'\c^\s*\(module\)\s*\(\w\+\)')
+  let linelist = matchlist(getline(modbegin),'\c^\s*\(module\)\s*\(' . idregex . '\)')
   if empty(linelist)
     echo 'No match to module name on line ' . modbegin . '!'
     return
@@ -25,11 +27,11 @@ function! vlsi#verilog#Yank() abort
   let g:modules[modname] = { 'generics' : [], 'ports' : [] }
   let kind = -1
   for curline in getline(modbegin, modend)
-    let linelist = matchlist(curline,'\c^\s*parameter\s*\(\w\+\)\s*=\s*\([^;]*\S\)\s*;')
+    let linelist = matchlist(curline,'\c^\s*parameter\s*\(' . idregex . '\)\s*=\s*\([^;]*\S\)\s*;')
     if !empty(linelist)
       let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : 'natural', 'value' : linelist[2] } ]
     endif
-    let linelist = matchlist(curline,'\c^\(input\|output\)')
+    let linelist = matchlist(curline,'\c^\s*\(input\|output\)')
     if !empty(linelist)
       let kind = 1
       if linelist[1] =~ '\c^i'
@@ -37,17 +39,18 @@ function! vlsi#verilog#Yank() abort
       else
         let dir = 'o'
       endif
-      let linelist = matchlist(curline,'\c^\(input\|output\)\s*\[\s*\(\d\+\)\s*:\s*\(\d\+\)\s*\]')
+      let linelist = matchlist(curline,'\c^\s*\(input\|output\)\s*\[\s*\(' . mixregex . '\)\s*:\s*\(' . mixregex . '\)\s*\]')
       if !empty(linelist)
-        let range = linelist[2] . ":" . linelist[3]
-        let curline = substitute(curline,'\c^\(input\|output\)\s*\[\s*\(\d\+\)\s*:\s*\(\d\+\)\s*\]','','')
+        let range = substitute(linelist[2],'\s*$','','') . "{{:}}" . substitute(linelist[3],'\s*$','','')
+        let curline = substitute(curline,'\c^\s*\(input\|output\)\s*\[\s*\(' . mixregex . '\)\s*:\s*\(' . mixregex . '\)\s*\]\s*','','')
       else
         let range = 0
-        let curline = substitute(curline,'\c^\(input\|output\)','','')
+        let curline = substitute(curline,'\c^\s*\(input\|output\)\s*','','')
       endif
     endif
     if kind == 1
-      let portlist = split(curline, '\W\+')
+      let portlist = []
+      call substitute(curline, idregex, '\=add(portlist, submatch(0))', 'g')
       for port in portlist
         let g:modules[modname].ports += [ { 'name' : port, 'dir' : dir, 'range' : range } ]
       endfor
@@ -102,7 +105,7 @@ function! vlsi#verilog#PasteAsModule(name)
         else
           let dir = 'output'
         endif
-        let rangelist = matchlist(item.range, '\(\d\+\):\(\d\+\)')
+        let rangelist = matchlist(item.range, '\(.*\){{:}}\(.*\)')
         if !empty(rangelist)
           let type = '[' . rangelist[1] . ':' . rangelist[2] . ']'
         else

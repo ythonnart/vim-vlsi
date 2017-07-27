@@ -63,6 +63,7 @@ endfunction
 
 "Capture Vlsi from user input
 function! vlsi#DefineNew() abort
+  let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
   if !exists('g:modules')
     let g:modules = {}
   endif
@@ -88,8 +89,8 @@ function! vlsi#DefineNew() abort
         let dir = input('Port direction (i/o): ', 'i')
     endwhile
     let range = ''
-    while range !~ '^\(0\|\d\+:\d\+\)$'
-        let range = input('Port range (0 for single wire / n:0 for bus): ', '0')
+    while range !~ '^\s*\(0\|\[' . mixregex . ':' . mixregex . '\]\)\s*$'
+        let range = input('Port range (0 for single wire / [h:l] for bus): ', '0')
     endwhile
     let g:modules[modname].ports += [ { 'name' : name, 'dir' : dir, 'range' : range } ]
     let name = input('New port name (leave empty if no more): ')
