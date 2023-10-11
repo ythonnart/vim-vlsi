@@ -113,9 +113,10 @@ while(<>) {
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
         }
 
-    } elsif (/^(\s*$idregex\s*:\s*)?(for|while|repeat|if|case|null|disable|assign|deassign)\b/i) {
-    
+    } elsif (/^\s*($idregex\s*:\s*)?(for|while|repeat|if|case|null|disable|assign|deassign)\b/i) {
+        # skip tag: assign ...
     } elsif (/^\s*($idregex)\s+($idregex)/i) { $name=$2; $kind='i';$sig=" ($1)";
+        # simple instances 'module module_instance_name'
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
 
     } elsif (/^\s*endmodule\b/i) { popscope(\$scope);
