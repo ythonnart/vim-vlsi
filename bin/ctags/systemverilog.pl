@@ -119,7 +119,17 @@ while(<>) {
         # simple instances 'module module_instance_name'
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
 
-    } elsif (/^\s*endmodule\b/i) { popscope(\$scope);
+    } elsif(/^\s*($idregex)\s+#\((.*)/i) { $kind='i';$sig=" ($1)"; $_=$2;
+        # module with parameters instanciation
+        # eat everything until ; (end of instance)
+        $_.=<> until /;/;
+        # eat comments
+        $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
+        $_ =~ m/[)]\s*($idregex)\s*/si;
+        $name=$1;
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
+
+    }elsif (/^\s*endmodule\b/i) { popscope(\$scope);
 
 
     }
