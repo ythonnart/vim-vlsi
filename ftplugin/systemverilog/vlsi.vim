@@ -1,7 +1,7 @@
 " Load specific functions for VHDL entity yank/paste
-let b:VlsiYank              = function('vlsi#verilog#Yank')
-let b:VlsiPasteAsDefinition = function('vlsi#verilog#PasteAsModule')
-let b:VlsiPasteAsInstance   = function('vlsi#verilog#PasteAsInstance')
+let b:VlsiYank              = function('vlsi#systemverilog#Yank')
+let b:VlsiPasteAsDefinition = function('vlsi#systemverilog#PasteAsModule')
+let b:VlsiPasteAsInstance   = function('vlsi#systemverilog#PasteAsInstance')
  
 " Create default bindings
 call vlsi#Bindings()
