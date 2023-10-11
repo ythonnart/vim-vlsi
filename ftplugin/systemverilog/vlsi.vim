@@ -7,9 +7,11 @@ let b:VlsiPasteAsInstance   = function('vlsi#verilog#PasteAsInstance')
 call vlsi#Bindings()
 
 " Tagbar ctags configuration
-let g:tagbar_type_verilog = {
-    \ 'ctagsbin' : expand('<sfile>:p:h:h:h') . '/bin/ctags/verilog.pl',
+let g:tagbar_type_systemverilog = {
+    \ 'ctagsbin' : expand('<sfile>:p:h:h:h') . '/bin/ctags/systemverilog.pl',
     \ 'kinds'     : [
+        \ 'd:macros:1:0',
+        \ 'h:headers:1:0',
         \ 'm:modules:1:0',
         \ 'g:parameters:1:0',
         \ 'p:ports:1:0',

@@ -89,4 +89,11 @@ while(<>) {
 
 
     }
+    elsif(/^\s*`include\s*["<]\s*(\S+?)\s*[">]/i){$kind='h'; $name=$1;
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\n";
+    }
+    elsif(/^\s*`define\s+(\w+)\s*(\w+)?/i){$kind='d'; $name=$1; $sig="";
+        if ($2 != "") {$sig = "\t ($2)";}
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
+    }
 }
