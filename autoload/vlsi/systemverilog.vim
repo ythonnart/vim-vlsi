@@ -41,7 +41,6 @@ function! vlsi#systemverilog#Yank() abort
         "parameter a = value;
         let linelist = matchlist(curline,'\c^\s*parameter\s*\(' . idregex . '\)\s*=\s*\([^;,]*\S\)\s*\(;\|,\)')
         if !empty(linelist)
-            echo curline
             "TODO capture parameter type ?
             let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : 'natural', 'value' : linelist[2] } ]
         endif
