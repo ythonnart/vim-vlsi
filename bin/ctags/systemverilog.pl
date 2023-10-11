@@ -86,10 +86,13 @@ while(<>) {
             print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
         }
 
-    } elsif (/^\s*(wire|reg)\b/i) { $kind='s'; $subkind=lc($1);
+
+    } elsif (/^\s*(wire|reg|logic)\b/i) { $kind='s'; $subkind=lc($1);
         $_.=<> until /;/;
         $_=~s/\/\*.*?\*\///sg;$_=~s/\/\/.*//mg;
-        $_=~s/^\s*(wire|reg)\s*\[\s*$idregex\s*:\s*$idregex\s*\]\s*//i;
+        #$_=~s/^\s*(wire|reg|logic)\s*\[\s*$idregex\s*:\s*$idregex\s*\]\s*//i;
+        $_=~s/\s*(wire|reg|logic)\s*//i;
+        $_=~s/\[[^\]]+\]\s*//i;
         $_=~s/\s*;.*//;
         for my $signal (split(/\s*,\s*/s,$_)) {
             next if $signal eq "";
