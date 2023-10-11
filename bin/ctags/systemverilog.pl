@@ -42,7 +42,8 @@ while(<>) {
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
 
-    } elsif (/^\s*parameter\s+($idregex)\s*/i) { $name=$1; $kind='g'; $sig="";
+    } elsif (/^\s*parameter\s+($idregex)\s*=\s*($idregex)?/i) { $name=$1; $kind='g'; $sig="";
+        if ($2 != ""){$sig="\tsignature: ($2)";}
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::generics$sig\n";
 
     } elsif (/^\s*(in|out|inout)(put)?\b/i) { $kind='p'; $subkind=lc($1);
@@ -137,7 +138,7 @@ while(<>) {
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\n";
     }
     elsif(/^\s*`define\s+(\w+)\s*(\w+)?/i){$kind='d'; $name=$1; $sig="";
-        if ($2 != "") {$sig = "\t ($2)";}
+        if ($2 != "") {$sig = "\tsignature: ($2)";}
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
     }
 }
