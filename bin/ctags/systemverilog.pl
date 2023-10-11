@@ -46,12 +46,42 @@ while(<>) {
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::generics$sig\n";
 
     } elsif (/^\s*(in|out|inout)(put)?\b/i) { $kind='p'; $subkind=lc($1);
-        $_.=<> until /;/;
-        $_=~s/\/\*.*?\*\///sg;$_=~s/\/\/.*//mg;
-        $_=~s/^\s*(in|out|inout)(put)?\s*\[\s*$idregex\s*:\s*$idregex\s*\]\s*//i;
+        # eat everything until , (end of port)
+        $_.=<> until /,|[)]/;
+        # eat comments
+        $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
+        # remove port def
+        $_=~s/\s*(in|out|inout)(put)?\s*(logic)?\s*//gi;
+        # remove ranges
+        $_=~s/\[[^\]]+\]\s*//gi;
+        # remove final )
+        $_=~s/\s*[)]\s*//gi;
+
+        chomp($_);
+        #endmod
         $_=~s/\s*;.*//;
         for my $port (split(/\s*,\s*/s,$_)) {
             next if $port !~ /($idregex)/;
+            $name=$port;$sig="\tsignature: ($subkind)";
+            print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
+        }
+    } elsif (/^\s*(\w+\.\w+)\b(.*)/i) {$kind='p'; $subkind=$1; $_=$2;
+        # interface signals
+        # eat everything until , (end of port)
+        $_.=<> until /,|[)]/;
+        # eat comments
+        $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
+        # remove ranges
+        $_=~s/\[[^\]]+\]\s*//gi;
+        # remove final )
+        $_=~s/\s*[)]\s*//gi;
+        # remove everything after ;
+        $_=~s/\s*;.*//;
+        chomp($_);
+
+        for my $port (split(/\s*,\s*/s,$_)) {
+            next if $port !~ /($idregex)/;
+            $port=~ s/^\s+|\s+$//g; # trim whitespaces at begining and end
             $name=$port;$sig="\tsignature: ($subkind)";
             print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
         }
