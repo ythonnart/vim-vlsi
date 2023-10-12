@@ -112,15 +112,17 @@ function! s:portIterator(moduleName,formatterFunctionName, suffix='')
             let l:portdef = {
                     \ 'dir': l:kind2dir[item.dir],
                     \ 'name': l:item.name,
-                    \ 'range': '',
-                    \ 'type': '     ',
+                    \ 'range_start': '',
+                    \ 'range_end': '',
+                    \ 'type': '',
                     \ 'suffix': a:suffix
                     \ }
 
             " check for range in the form 23{{:}}43
             let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
             if !empty(l:rangelist)
-                let l:portdef.range = '[' . l:rangelist[1] . ':' . l:rangelist[2] . ']'
+                let l:portdef.range_start = l:rangelist[1]
+                let l:portdef.range_end   = l:rangelist[2]
             endif
 
             " check for type
@@ -138,10 +140,18 @@ function! s:portIterator(moduleName,formatterFunctionName, suffix='')
     return l:ports
 endfunction
 
+" format a range from a port definition
+function! s:formatRange(port)
+    if a:port.range_start == ''
+        return ''
+    endif
+
+    return '[' .. a:port.range_start .. ':' .. a:port.range_end .. ']'
+endfunction
 
 " define the formatting function for module IOs
 function! s:moduleIOFormatter(port)
-    return "    " .. a:port.dir .. " " .. a:port.type .. " " .. a:port.range .. " " .. a:port.name
+    return "    " .. a:port.dir .. " " .. a:port.type .. " " .. s:formatRange(a:port) .. " " .. a:port.name
 endfunction
 
 
@@ -268,7 +278,7 @@ endfunction
 
 " define the formatting function for instance signals
 function! s:instanceSignalFormatter(port)
-    return "" .. a:port.type .. " " .. a:port.range .. " " .. a:port.name .. a:port.suffix
+    return "" .. a:port.type .. " " .. s:formatRange(a:port) .. " " .. a:port.name .. a:port.suffix
 endfunction
 
 "Insert entity defined by a:name as instance
