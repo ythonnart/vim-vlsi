@@ -128,7 +128,10 @@ function! s:portIterator(moduleName,formatterFunctionName, suffix='')
                 let l:portdef.type = l:item.type
             endif
 
+            " Call formatter to format l:portdef
+            " e.g. moduleIOFormatter(l:portdef)
             let l:port_full_def = eval("".. a:formatterFunctionName .. "(" .. string(l:portdef) .. ')')
+            " Add returned string to the list of ports
             call add(l:ports, l:port_full_def)
         endfor
     endif
