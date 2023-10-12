@@ -105,17 +105,15 @@ endfunction
 function! s:portIterator(moduleName,formatterFunctionName, suffix='')
     if !empty(g:modules[a:moduleName].ports)
         let l:ports = []
-        " transform standardized kinds 'i','o','io' into 6 letters verilog directions
-        let l:kind2dir = {'i':'input ', 'o':'output', 'io': 'inout '}
         " for each port
         for l:item in g:modules[a:moduleName].ports
             let l:portdef = {
-                    \ 'dir': l:kind2dir[item.dir],
-                    \ 'name': l:item.name,
-                    \ 'range_start': '',
-                    \ 'range_end': '',
-                    \ 'type': '',
-                    \ 'suffix': a:suffix
+                    \ 'dir'         :  s:formatDirection(l:item.dir),
+                    \ 'name'        :  l:item.name,
+                    \ 'range_start' :  '',
+                    \ 'range_end'   :  '',
+                    \ 'type'        :  '',
+                    \ 'suffix'      :  a:suffix
                     \ }
 
             " check for range in the form 23{{:}}43
@@ -133,6 +131,7 @@ function! s:portIterator(moduleName,formatterFunctionName, suffix='')
             " Call formatter to format l:portdef
             " e.g. moduleIOFormatter(l:portdef)
             let l:port_full_def = eval("".. a:formatterFunctionName .. "(" .. string(l:portdef) .. ')')
+
             " Add returned string to the list of ports
             call add(l:ports, l:port_full_def)
         endfor
@@ -147,6 +146,13 @@ function! s:formatRange(port)
     endif
 
     return '[' .. a:port.range_start .. ':' .. a:port.range_end .. ']'
+endfunction
+
+" format a port direction
+function! s:formatDirection(module_port_dir)
+    " transform standardized kinds 'i','o','io' into 6 letters verilog directions
+    let l:kind2dir = {'i':'input', 'o':'output', 'io': 'inout'}
+    return kind2dir[a:module_port_dir]
 endfunction
 
 " define the formatting function for module IOs
