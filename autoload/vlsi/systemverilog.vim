@@ -101,40 +101,37 @@ endfunction
 " @arg moduleName (str) the module name
 " @arg formatterFunctionName (str) the formatter function that will be used
 " @arg suffix (str) an optionnal suffix for all signals (used in instance and signal pasting)
+" @return a list of ports definition as strings
 function! s:portIterator(moduleName,formatterFunctionName, suffix='')
-    if has_key(g:modules, a:moduleName)
-        if !empty(g:modules[a:moduleName].ports)
-            let l:ports = []
-            " transform standardized kinds 'i','o','io' into 6 letters verilog directions
-            let l:kind2dir = {'i':'input ', 'o':'output', 'io': 'inout '}
-            " for each port
-            for l:item in g:modules[a:moduleName].ports
-                " direction
-                let l:dir = l:kind2dir[item.dir]
-                " name
-                let l:name = l:item.name
-                " check for range in the form 23{{:}}43
-                let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
-                if !empty(l:rangelist)
-                    let l:range = '[' . l:rangelist[1] . ':' . l:rangelist[2] . ']'
-                else
-                    let l:range = ""
-                endif
+    if !empty(g:modules[a:moduleName].ports)
+        let l:ports = []
+        " transform standardized kinds 'i','o','io' into 6 letters verilog directions
+        let l:kind2dir = {'i':'input ', 'o':'output', 'io': 'inout '}
+        " for each port
+        for l:item in g:modules[a:moduleName].ports
+            " direction
+            let l:dir = l:kind2dir[item.dir]
+            " name
+            let l:name = l:item.name
+            " check for range in the form 23{{:}}43
+            let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
+            if !empty(l:rangelist)
+                let l:range = '[' . l:rangelist[1] . ':' . l:rangelist[2] . ']'
+            else
+                let l:range = ""
+            endif
 
-                " check for type
-                let l:type = '     ' "blanks, the size of 'logic' for alignment
-                if has_key(l:item,'type')
-                    let l:type = l:item.type
-                endif
-                let l:port_full_def = eval("".. a:formatterFunctionName .. "('" .. l:dir .. "','" .. l:type .."','" .. l:range .. "','" .. l:name .. "','" .. a:suffix .. "')")
-                "echo l:port_full_def
-                call add(l:ports, l:port_full_def)
-            endfor
-        endif
-        return l:ports
-    else
-        echo '    Unknown entity ' . a:moduleName . '!'
+            " check for type
+            let l:type = '     ' "blanks, the size of 'logic' for alignment
+            if has_key(l:item,'type')
+                let l:type = l:item.type
+            endif
+            let l:port_full_def = eval("".. a:formatterFunctionName .. "('" .. l:dir .. "','" .. l:type .."','" .. l:range .. "','" .. l:name .. "','" .. a:suffix .. "')")
+            "echo l:port_full_def
+            call add(l:ports, l:port_full_def)
+        endfor
     endif
+    return l:ports
 endfunction
 
 
