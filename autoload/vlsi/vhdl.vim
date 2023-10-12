@@ -50,7 +50,11 @@ function! vlsi#vhdl#Yank() abort
     let linelist = matchlist(curline,'\c^\s*\(' . idregex . '\)\s*:\s*\(in\|out\|inout\)\s*\(.\{-}\S\)\s*\($\|;\|--\)')
     if kind == 1 && !empty(linelist)
       if linelist[2] =~ '\c^i'
-        let dir = 'i'
+          if linelist[2] =~ '\c^inout'
+              let dir = 'io'
+          else
+            let dir = 'i'
+          endif
       elseif linelist[2] =~ '\c^o'
         let dir = 'o'
       else
@@ -105,6 +109,8 @@ function! vlsi#vhdl#PasteAsEntity(name)
       for item in g:modules[name].ports
         if item.dir == 'i'
           let dir = ChangeCase('in ')
+        elseif item.dir == 'io'
+            let dir = ChangeCase('inout')
         else
           let dir = ChangeCase('out')
         endif
@@ -165,6 +171,8 @@ function! vlsi#vhdl#PasteAsComponent(name)
       for item in g:modules[name].ports
         if item.dir == 'i'
           let dir = ChangeCase('in ')
+      elseif item.dir == 'io'
+          let dir = ChangeCase('inout ')
         else
           let dir = ChangeCase('out')
         endif

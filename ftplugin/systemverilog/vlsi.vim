@@ -1,4 +1,4 @@
-" Load specific functions for verilog entity yank/paste
+" Load specific functions for VHDL entity yank/paste
 let b:VlsiYank              = function('vlsi#v_sv#Yank')
 let b:VlsiPasteAsDefinition = function('vlsi#v_sv#PasteAsModule')
 let b:VlsiPasteAsInstance   = function('vlsi#v_sv#PasteAsInstance')
@@ -7,7 +7,7 @@ let b:VlsiPasteAsInstance   = function('vlsi#v_sv#PasteAsInstance')
 call vlsi#Bindings()
 
 " Tagbar ctags configuration
-let g:tagbar_type_verilog = {
+let g:tagbar_type_systemverilog = {
     \ 'ctagsbin' : expand('<sfile>:p:h:h:h') . '/bin/ctags/systemverilog.pl',
     \ 'kinds'     : [
         \ 'd:macros:1:0',
