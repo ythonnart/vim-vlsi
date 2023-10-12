@@ -96,6 +96,11 @@ function! vlsi#systemverilog#Yank() abort
     echo '    Capture for module ' . modname . ' successful!'
 endfunction
 
+" this function iterates over ports and format them using 'formatterFunctionName' function
+" this allows code factorization for the Paste* functions
+" @arg moduleName (str) the module name
+" @arg formatterFunctionName (str) the formatter function that will be used
+" @arg suffix (str) an optionnal suffix for all signals (used in instance and signal pasting)
 function! s:portIterator(moduleName,formatterFunctionName, suffix='')
     if has_key(g:modules, a:moduleName)
         if !empty(g:modules[a:moduleName].ports)
