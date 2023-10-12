@@ -109,25 +109,26 @@ function! s:portIterator(moduleName,formatterFunctionName, suffix='')
         let l:kind2dir = {'i':'input ', 'o':'output', 'io': 'inout '}
         " for each port
         for l:item in g:modules[a:moduleName].ports
-            " direction
-            let l:dir = l:kind2dir[item.dir]
-            " name
-            let l:name = l:item.name
+            let l:portdef = {
+                    \ 'dir': l:kind2dir[item.dir],
+                    \ 'name': l:item.name,
+                    \ 'range': '',
+                    \ 'type': '     ',
+                    \ 'suffix': a:suffix
+                    \ }
+
             " check for range in the form 23{{:}}43
             let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
             if !empty(l:rangelist)
-                let l:range = '[' . l:rangelist[1] . ':' . l:rangelist[2] . ']'
-            else
-                let l:range = ""
+                let l:portdef.range = '[' . l:rangelist[1] . ':' . l:rangelist[2] . ']'
             endif
 
             " check for type
-            let l:type = '     ' "blanks, the size of 'logic' for alignment
             if has_key(l:item,'type')
-                let l:type = l:item.type
+                let l:portdef.type = l:item.type
             endif
-            let l:port_full_def = eval("".. a:formatterFunctionName .. "('" .. l:dir .. "','" .. l:type .."','" .. l:range .. "','" .. l:name .. "','" .. a:suffix .. "')")
-            "echo l:port_full_def
+
+            let l:port_full_def = eval("".. a:formatterFunctionName .. "(" .. string(l:portdef) .. ')')
             call add(l:ports, l:port_full_def)
         endfor
     endif
@@ -136,8 +137,8 @@ endfunction
 
 
 " define the formatting function for module IOs
-function! s:moduleIOFormatter(dir, type, range, name, signal_suffix ='')
-    return "    " .. a:dir .. " " .. a:type .. " " .. a:range .. " " .. a:name
+function! s:moduleIOFormatter(port)
+    return "    " .. a:port.dir .. " " .. a:port.type .. " " .. a:port.range .. " " .. a:port.name
 endfunction
 
 
@@ -200,8 +201,8 @@ function! vlsi#systemverilog#PasteAsModule(name)
 endfunction
 
 " define the formatting function for instance IOs
-function! s:instanceIOFormatter(dir, type, range, name, signal_suffix ='')
-    return "    .".. a:name .. "(" .. a:name .. a:signal_suffix .. ")"
+function! s:instanceIOFormatter(port)
+    return "    .".. a:port.name .. "(" .. a:port.name .. a:port.suffix .. ")"
 endfunction
 
 "Insert entity defined by a:name as instance
@@ -254,8 +255,8 @@ endfunction
 
 
 " define the formatting function for instance signals
-function! s:instanceSignalFormatter(dir, type, range, name, signal_suffix ='')
-    return "" .. a:type .. " " .. a:range .. " " .. a:name .. a:signal_suffix
+function! s:instanceSignalFormatter(port)
+    return "" .. a:port.type .. " " .. a:port.range .. " " .. a:port.name .. a:port.suffix
 endfunction
 
 "Insert entity defined by a:name as instance
