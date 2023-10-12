@@ -104,37 +104,50 @@ endfunction
 " @return a list of ports definition as strings
 function! s:portIterator(moduleName,formatterFunctionName, suffix='')
     if !empty(g:modules[a:moduleName].ports)
+        " for each port get the max size of each element dir, name, range, type
+        let l:elem_max_size = {'dir':0, 'name':0, 'range':0, 'type':0}
         let l:ports = []
-        " for each port
-        for l:item in g:modules[a:moduleName].ports
-            let l:portdef = {
-                    \ 'dir'         :  s:formatDirection(l:item.dir),
-                    \ 'name'        :  l:item.name,
-                    \ 'range_start' :  '',
-                    \ 'range_end'   :  '',
-                    \ 'type'        :  '',
-                    \ 'suffix'      :  a:suffix
-                    \ }
+        for l:state in ['align-pass', 'generate-pass']
+            for l:item in g:modules[a:moduleName].ports
+                let l:portdef = {
+                        \ 'dir'         :  s:formatDirection(l:item.dir),
+                        \ 'name'        :  l:item.name,
+                        \ 'range_start' :  '',
+                        \ 'range_end'   :  '',
+                        \ 'type'        :  '',
+                        \ 'suffix'      :  a:suffix,
+                        \ 'max_sizes'   :  l:elem_max_size
+                        \ }
 
-            " check for range in the form 23{{:}}43
-            let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
-            if !empty(l:rangelist)
-                let l:portdef.range_start = l:rangelist[1]
-                let l:portdef.range_end   = l:rangelist[2]
-            endif
+                " check for range in the form 23{{:}}43
+                let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
+                if !empty(l:rangelist)
+                    let l:portdef.range_start = l:rangelist[1]
+                    let l:portdef.range_end   = l:rangelist[2]
+                endif
 
-            " check for type
-            if has_key(l:item,'type')
-                let l:portdef.type = l:item.type
-            endif
+                " check for type
+                if has_key(l:item,'type')
+                    let l:portdef.type = l:item.type
+                endif
 
-            " Call formatter to format l:portdef
-            " e.g. moduleIOFormatter(l:portdef)
-            let l:port_full_def = eval("".. a:formatterFunctionName .. "(" .. string(l:portdef) .. ')')
+                if l:state == 'generate-pass'
+                    " Call formatter to format l:portdef
+                    " e.g. moduleIOFormatter(l:portdef)
+                    let l:port_full_def = eval("".. a:formatterFunctionName .. "(" .. string(l:portdef) .. ')')
 
-            " Add returned string to the list of ports
-            call add(l:ports, l:port_full_def)
-        endfor
+                    " Add returned string to the list of ports
+                    call add(l:ports, l:port_full_def)
+                elseif l:state == 'align-pass'
+                    " only measure sizes
+                    let l:elem_max_size.dir   = (l:elem_max_size.dir   < len(l:portdef.dir ) ? len(l:portdef.dir ) : l:elem_max_size.dir)
+                    let l:elem_max_size.type  = (l:elem_max_size.type  < len(l:portdef.type) ? len(l:portdef.type) : l:elem_max_size.type)
+                    let l:elem_max_size.name  = (l:elem_max_size.name  < len(l:portdef.name) ? len(l:portdef.name) : l:elem_max_size.name)
+                    let l:range_size = len(s:formatRange(l:portdef))
+                    let l:elem_max_size.range = (l:elem_max_size.range < l:range_size   ? l:range_size   : l:elem_max_size.range)
+                endif
+            endfor "Foreach port
+        endfor " align-pass / generate-pass
     endif
     return l:ports
 endfunction
@@ -157,7 +170,11 @@ endfunction
 
 " define the formatting function for module IOs
 function! s:moduleIOFormatter(port)
-    return "    " .. a:port.dir .. " " .. a:port.type .. " " .. s:formatRange(a:port) .. " " .. a:port.name
+    let l:format = printf("    %%-%ds %%-%ds %%-%ds %%s",
+                \ a:port.max_sizes.dir,
+                \ a:port.max_sizes.type,
+                \ a:port.max_sizes.range)
+    return printf(l:format, a:port.dir, a:port.type, s:formatRange(a:port), a:port.name)
 endfunction
 
 
@@ -221,7 +238,10 @@ endfunction
 
 " define the formatting function for instance IOs
 function! s:instanceIOFormatter(port)
-    return "    .".. a:port.name .. "(" .. a:port.name .. a:port.suffix .. ")"
+    let l:format = printf("    .%%-%ds (%%-%ds)",
+                \ a:port.max_sizes.name,
+                \ a:port.max_sizes.name + len(a:port.suffix))
+    return printf(l:format, a:port.name, a:port.name .. a:port.suffix)
 endfunction
 
 "Insert entity defined by a:name as instance
@@ -284,7 +304,11 @@ endfunction
 
 " define the formatting function for instance signals
 function! s:instanceSignalFormatter(port)
-    return "" .. a:port.type .. " " .. s:formatRange(a:port) .. " " .. a:port.name .. a:port.suffix
+    " logic [31:0] signame
+    let l:format = printf("%%-%ds %%-%ds %%s",
+                \ a:port.max_sizes.type,
+                \ a:port.max_sizes.range)
+    return printf(l:format, a:port.type, s:formatRange(a:port), a:port.name .. a:port.suffix)
 endfunction
 
 "Insert entity defined by a:name as instance

@@ -27,7 +27,7 @@ function! vlsi#Bindings()
   command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsInstance   :call b:VlsiPasteAsInstance('<args>')
 
   " <Plug> Mappings
-  noremap <silent> <Plug>VlsiYank              :call b:VlsiYank     ()<CR>
+  noremap <silent> <Plug>VlsiYank              :call b:VlsiYank     ('')<CR>
   noremap <silent> <Plug>VlsiList              :echo join(vlsi#ListModules('<args>','',''),' ')<CR>
   noremap <silent> <Plug>VlsiDefineNew         :call vlsi#DefineNew ()<CR>
   noremap <silent> <Plug>VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition   ('')<CR>
