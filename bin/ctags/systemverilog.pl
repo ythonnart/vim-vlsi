@@ -52,7 +52,7 @@ while(<>) {
         # eat comments
         $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
         # remove port def
-        $_=~s/\s*(in|out|inout)(put)?\s*(logic)?\s*//gi;
+        $_=~s/\s*(in|out|inout)(put)?\s*(logic|wire)?\s*//gi;
         # remove ranges
         $_=~s/\[[^\]]+\]\s*//gi;
         # remove final )

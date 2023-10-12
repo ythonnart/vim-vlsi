@@ -1,7 +1,9 @@
+"" Verilog / Systemverilog implementation of VlsiYank / VlsiPaste* 
+" Author: Laurent Alacoque
+
 "Parse module around cursor
-function! vlsi#systemverilog#Yank() abort
-    "let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
-    " identifier number or codegen pattern
+function! vlsi#v_sv#Yank() abort
+    " identifier, number or codegen pattern
     let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     if !exists('g:modules')
@@ -61,7 +63,7 @@ function! vlsi#systemverilog#Yank() abort
 
             let remainder = linelist[2]
             " handle optional port type
-            let linelist = matchlist(remainder,'\c^\s*\(logic\)\s*\(.*\)$')
+            let linelist = matchlist(remainder,'\c^\s*\(logic\|wire\)\s*\(.*\)$')
             if !empty(linelist)
                 let port_type = linelist[1]
                 let remainder = linelist[2]
@@ -114,7 +116,7 @@ function! s:portIterator(moduleName,formatterFunctionName, suffix='')
                         \ 'name'        :  l:item.name,
                         \ 'range_start' :  '',
                         \ 'range_end'   :  '',
-                        \ 'type'        :  '',
+                        \ 'type'        :  (&filetype == 'verilog' ? 'wire' : 'logic'),
                         \ 'suffix'      :  a:suffix,
                         \ 'max_sizes'   :  l:elem_max_size
                         \ }
@@ -124,11 +126,6 @@ function! s:portIterator(moduleName,formatterFunctionName, suffix='')
                 if !empty(l:rangelist)
                     let l:portdef.range_start = l:rangelist[1]
                     let l:portdef.range_end   = l:rangelist[2]
-                endif
-
-                " check for type
-                if has_key(l:item,'type')
-                    let l:portdef.type = l:item.type
                 endif
 
                 if l:state == 'generate-pass'
@@ -179,7 +176,7 @@ endfunction
 
 
 "Insert entity defined a:name as 'module'
-function! vlsi#systemverilog#PasteAsModule(name)
+function! vlsi#v_sv#PasteAsModule(name)
     " Find module name or ask for it
     if !exists('g:modules')
         let g:modules = {}
@@ -215,7 +212,7 @@ function! vlsi#systemverilog#PasteAsModule(name)
         " start module ports
         let l:moduledef .= " (\x01"
 
-        "retrieve ports (using vlsi#systemverilog#moduleIOFormatter formatter)
+        "retrieve ports (using vlsi#v_sv#moduleIOFormatter formatter)
         let l:ports = s:portIterator(name,'s:moduleIOFormatter')
 
         "join the port definition list with ,\x01 marker
@@ -245,7 +242,7 @@ function! s:instanceIOFormatter(port)
 endfunction
 
 "Insert entity defined by a:name as instance
-function! vlsi#systemverilog#PasteAsInstance(name, signal_suffix='')
+function! vlsi#v_sv#PasteAsInstance(name, signal_suffix='')
     " Find module name or ask for it
     if !exists('g:modules')
         let g:modules = {}
@@ -312,7 +309,7 @@ function! s:instanceSignalFormatter(port)
 endfunction
 
 "Insert entity defined by a:name as instance
-function! vlsi#systemverilog#PasteInstanceSignals(name, signal_suffix='')
+function! vlsi#v_sv#PasteInstanceSignals(name, signal_suffix='')
     " Find module name or ask for it
     if !exists('g:modules')
         let g:modules = {}
