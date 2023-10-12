@@ -226,7 +226,25 @@ function! vlsi#systemverilog#PasteAsInstance(name, signal_suffix='')
     let l:instancedef = ''
     if has_key(g:modules, name)
         " start the module, NOTE: we use \x01 char for newlines marker
-        let l:instancedef .= ''.. name .. " u_" .. name .. a:signal_suffix .. " (\x01"
+        let l:instancedef .= name
+
+        " Handle parameters instanciation
+        if !empty(g:modules[name].generics)
+            "start #( ) parameter instanciation
+            let l:instancedef .= " #(\x01"
+            "build a list of instance parameters
+            let l:instanceparameters = []
+            for item in g:modules[name].generics
+                " format parameter as '.PARAM (VALUE)'
+                call add(l:instanceparameters, "    ." .. item.name .." (" .. item.value ..")")
+            endfor
+            " join the list with ,\x01
+            let l:instancedef .= join(l:instanceparameters,",\x01")
+            " terminate the parameter #()
+            let l:instancedef .= "\x01)"
+        endif
+
+        let l:instancedef .= " u_" .. name .. a:signal_suffix .. " (\x01"
 
         "retrieve ports (using s:instanceIOFormatter formatter)
         let l:ports = s:portIterator(name,'s:instanceIOFormatter',a:signal_suffix )
@@ -242,15 +260,6 @@ function! vlsi#systemverilog#PasteAsInstance(name, signal_suffix='')
         call append(line('.'), split(l:instancedef,"\x01") )
         let lnum = line('.')
 
-        "TODO handle generics
-        " if !empty(g:modules[name].generics)
-        "     for item in g:modules[name].generics
-        "         call append(lnum, 'parameter ' . item.name . ' = ' . item.value . ' ;')
-        "         let lnum = lnum + 1
-        "     endfor
-        "     call append(lnum, [''])
-        "     let lnum = lnum + 1
-        " endif
     else
         echo '    Unknown entity ' . name . '!'
     endif
