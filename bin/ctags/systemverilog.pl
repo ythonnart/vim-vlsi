@@ -133,14 +133,9 @@ while(<>) {
         $name=$1;
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
 
-    }elsif (/^\s*endmodule\b/i) { popscope(\$scope);
-
-
-    }
-    elsif(/^\s*`include\s*["<]\s*(\S+?)\s*[">]/i){$kind='h'; $name=$1;
+    }elsif(/^\s*`include\s*["<]\s*(\S+?)\s*[">]/i){$kind='h'; $name=$1;
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\n";
-    }
-    elsif(/^\s*`define\s+(\w+)\s*(\w+)?/i){$kind='d'; $name=$1; $sig="";
+    }elsif(/^\s*`define\s+(\w+)\s*(\w+)?/i){$kind='d'; $name=$1; $sig="";
         if ($2 != "") {$sig = "\tsignature: ($2)";}
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
     }elsif (/^\s*endmodule\b/i) { popscope(\$scope);
