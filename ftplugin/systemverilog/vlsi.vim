@@ -13,6 +13,7 @@ let g:tagbar_type_systemverilog = {
         \ 'd:macros:1:0',
         \ 'h:headers:1:0',
         \ 'm:modules:1:0',
+        \ 'I:interfaces:1:0',
         \ 'g:parameters:1:0',
         \ 'p:ports:1:0',
         \ 's:signals:1:0',
@@ -22,6 +23,7 @@ let g:tagbar_type_systemverilog = {
     \ 'sro'        : '::',
     \ 'scope2kind' : {
         \ 'module'       : 'm',
+        \ 'interface'       : 'I',
         \ 'parameter'    : 'g',
         \ 'port'         : 'p',
         \ 'signal'       : 's',
@@ -30,6 +32,7 @@ let g:tagbar_type_systemverilog = {
     \ },
     \ 'kind2scope' : {
         \ 'm' : 'module',
+        \ 'I' : 'interface',
         \ 'g' : 'parameter',
         \ 'p' : 'port',
         \ 's' : 'signal',

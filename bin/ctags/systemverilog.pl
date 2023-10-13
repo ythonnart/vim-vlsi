@@ -17,6 +17,7 @@ my $datatype=qr(logic|wire|reg|\w+::\w+\S*);
 my $scalar=qr(\d*'[bohd][0-9a-fA-F]+|\d+|\d+\.\d*);
 my %kind2scope=(
         'm' => 'module',
+        'I' => 'interface'
         );
 
 sub pushscope {
@@ -40,6 +41,10 @@ while(<>) {
         $_.=<> until (/<\/s>/ or eof);
 
     } elsif (/^\s*module\s+($idregex)\s*/i) { $name=$1; $kind='m'; $sig="";
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
+        $curscope=$name; pushscope(\$scope,$curscope);
+        $kscope=$kind2scope{$kind}; 
+    } elsif (/^\s*interface\s+($idregex)\s*/i) { $name=$1; $kind='I'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
@@ -139,7 +144,7 @@ while(<>) {
     }elsif(/^\s*`define\s+(\w+)\s*($scalar)?/i){$kind='d'; $name=$1; $sig="";
         if ($2 != "") {$sig = "\tsignature: ($2)";}
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
-    }elsif (/^\s*endmodule\b/i) { popscope(\$scope);
+    }elsif (/^\s*(endmodule|endinterface)\b/i) { popscope(\$scope);
     }elsif(/^\s*(\/\/|$)/i){
         # pass comments and empty lines
     }elsif(/^\s*($idregex)\s*$/i){
