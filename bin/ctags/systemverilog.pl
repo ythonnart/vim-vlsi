@@ -119,10 +119,12 @@ while(<>) {
         # skip tag: assign ...
     } elsif (/^\s*($idregex)\s+($idregex)/i) { $name=$2; $kind='i';$sig="\tsignature: ($1)";
         # simple instances 'module module_instance_name'
+        # eat everything until ; (end of instance)
+        $_.=<> until /;/;
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
 
     } elsif(/^\s*($idregex)\s+#\((.*)/i) { $kind='i';$sig="\tsignature: ($1)"; $_=$2;
-        # module with parameters instanciation
+        # module with parameters instanciation 'modname u_inst #('
         # eat everything until ; (end of instance)
         $_.=<> until /;/;
         # eat comments
@@ -141,5 +143,20 @@ while(<>) {
     elsif(/^\s*`define\s+(\w+)\s*(\w+)?/i){$kind='d'; $name=$1; $sig="";
         if ($2 != "") {$sig = "\tsignature: ($2)";}
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
+    }elsif (/^\s*endmodule\b/i) { popscope(\$scope);
+    }elsif(/^\s*(\/\/|$)/i){
+        # pass comments and empty lines
+    }elsif(/^\s*($idregex)\s*$/i){
+        # single identifier: catchall for instances
+        $sig="\tsignature: ($1)";
+        $_.=<> until /;/;
+        $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
+        $_ =~ m/[)]\s*($idregex)\s*/si;
+        $name=$1;
+        $kind='i';
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
+    }else {
+        # unseen things
+        # print ";line:$line\t$_\n";
     }
 }
