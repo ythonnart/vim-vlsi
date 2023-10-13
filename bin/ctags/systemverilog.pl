@@ -13,6 +13,7 @@ my $curscope="";
 my $kscope="";
 my $scope_body=0;
 my $idregex=qr((?:\w+(?:<[if]>(?:[^<]|<[^\/])*<\/[if]>)*|(?:<[if]>(?:[^<]|<[^\/])*<\/[if]>)+)(?:\w+(?:<[if]>(?:[^<]|<[^/])*<\/[if]>)*)*);
+my $datatype=qr(logic|wire|reg|\w+::\w+\S*);
 my %kind2scope=(
         'm' => 'module',
         );
@@ -88,13 +89,11 @@ while(<>) {
             $name=$port;$sig="\tsignature: ($subkind)";
             print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
         }
-
-
-    } elsif (/^\s*(wire|reg|logic)\b/i) { $kind='s'; $subkind=lc($1);
+    } elsif (/^\s*($datatype)\b/i) { $kind='s'; $subkind=lc($1);
         $_.=<> until /;/;
         $_=~s/\/\*.*?\*\///sg;$_=~s/\/\/.*//mg;
         #$_=~s/^\s*(wire|reg|logic)\s*\[\s*$idregex\s*:\s*$idregex\s*\]\s*//i;
-        $_=~s/\s*(wire|reg|logic)\s*//i;
+        $_=~s/\s*($datatype)\s*//i;
         $_=~s/\[[^\]]+\]\s*//gi;
         $_=~s/\s*;.*//;
         for my $signal (split(/\s*,\s*/s,$_)) {
