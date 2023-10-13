@@ -42,8 +42,10 @@ while(<>) {
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
 
-    } elsif (/^\s*parameter\s+($idregex)\s*=\s*($idregex)?/i) { $name=$1; $kind='g'; $sig="";
-        if ($2 != ""){$sig="\tsignature: ($2)";}
+    } elsif (/^\s*(localparam|parameter)\s+(?:$datatype\s+)?(?:\[[^\]]+\]\s+)?($idregex)\s*=\s*(\S+?)?\s*[;,]?/i) { $name=$2; $kind='g'; $sig="";
+        if ($3 != ""){$sig="\tsignature: ($3)";}
+        if ($1 eq "localparam") {$sig = "\taccess:private$sig";}
+        else {$sig ="\taccess:public$sig";}
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::generics$sig\n";
 
     } elsif (/^\s*(in|out|inout)(put)?\b/i) { $kind='p'; $subkind=lc($1);
