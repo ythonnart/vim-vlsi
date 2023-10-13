@@ -14,6 +14,7 @@ my $kscope="";
 my $scope_body=0;
 my $idregex=qr((?:\w+(?:<[if]>(?:[^<]|<[^\/])*<\/[if]>)*|(?:<[if]>(?:[^<]|<[^\/])*<\/[if]>)+)(?:\w+(?:<[if]>(?:[^<]|<[^/])*<\/[if]>)*)*);
 my $datatype=qr(logic|wire|reg|\w+::\w+\S*);
+my $scalar=qr(\d*'[bohd][0-9a-fA-F]+|\d+|\d+\.\d*);
 my %kind2scope=(
         'm' => 'module',
         );
@@ -135,7 +136,7 @@ while(<>) {
 
     }elsif(/^\s*`include\s*["<]\s*(\S+?)\s*[">]/i){$kind='h'; $name=$1;
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\n";
-    }elsif(/^\s*`define\s+(\w+)\s*(\w+)?/i){$kind='d'; $name=$1; $sig="";
+    }elsif(/^\s*`define\s+(\w+)\s*($scalar)?/i){$kind='d'; $name=$1; $sig="";
         if ($2 != "") {$sig = "\tsignature: ($2)";}
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
     }elsif (/^\s*endmodule\b/i) { popscope(\$scope);
