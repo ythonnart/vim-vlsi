@@ -37,7 +37,7 @@ while(<>) {
     if (/^\s*<s>/) {
         $_.=<> until /<\/s>/;
 
-    } elsif (/^\s*module\s+($idregex)\s+#?\(/i) { $name=$1; $kind='m'; $sig="";
+    } elsif (/^\s*module\s+($idregex)\s*/i) { $name=$1; $kind='m'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
