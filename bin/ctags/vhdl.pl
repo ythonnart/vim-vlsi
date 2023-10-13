@@ -40,7 +40,7 @@ while(<>) {
     $address=$_;
     $line=$.;
     if (/^\s*<s>/) {
-        $_.=<> until /<\/s>/;
+        $_.=<> until (/<\/s>/ or eof);
 
     } elsif (/^\s*entity\s+($idregex)\s+is/i) { $name=$1; $kind='e'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";

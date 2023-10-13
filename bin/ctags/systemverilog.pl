@@ -36,7 +36,7 @@ while(<>) {
     $address=$_;
     $line=$.;
     if (/^\s*<s>/) {
-        $_.=<> until /<\/s>/;
+        $_.=<> until (/<\/s>/ or eof);
 
     } elsif (/^\s*module\s+($idregex)\s*/i) { $name=$1; $kind='m'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
@@ -51,7 +51,7 @@ while(<>) {
 
     } elsif (/^\s*(in|out|inout)(put)?\b/i) { $kind='p'; $subkind=lc($1);
         # eat everything until , (end of port)
-        $_.=<> until /,|[)]/;
+        $_.=<> until (/,|[)]/ or eof);
         # eat comments
         $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
         # remove port def
@@ -72,7 +72,7 @@ while(<>) {
     } elsif (/^\s*(\w+\.\w+)\b(.*)/i) {$kind='p'; $subkind=$1; $_=$2;
         # interface signals
         # eat everything until , (end of port)
-        $_.=<> until /,|[)]/;
+        $_.=<> until (/,|[)]/ or eof);
         # eat comments
         $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
         # remove ranges
@@ -90,7 +90,7 @@ while(<>) {
             print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
         }
     } elsif (/^\s*($datatype)\b/i) { $kind='s'; $subkind=lc($1);
-        $_.=<> until /;/;
+        $_.=<> until (/;/ or eof);
         $_=~s/\/\*.*?\*\///sg;$_=~s/\/\/.*//mg;
         #$_=~s/^\s*(wire|reg|logic)\s*\[\s*$idregex\s*:\s*$idregex\s*\]\s*//i;
         $_=~s/\s*($datatype)\s*//i;
@@ -104,13 +104,13 @@ while(<>) {
         }
 
     } elsif (/^\s*initial\b/i) {
-        $_.=<> until /begin|;/;
+        $_.=<> until (/begin|;/ or eof);
         if(/^\s*initial\s*(?:\s*begin\s*:\s*($idregex))?/i) { $name=$1?$1:"line$."; $kind='r';$sig="\tsignature: initial";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
         }
 
     } elsif (/^\s*always\b/i) {
-        $_.=<> until /begin|;/;
+        $_.=<> until (/begin|;/ or eof);
         if(/^\s*always\s*(|_comb|_latch|_ff|@\s*\([^)]*\))(?:\s*begin\s*:\s*($idregex))?/i) { $name=$2?$2:"line$."; $kind='r';$sig="\tsignature: always$1";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
         }
@@ -120,13 +120,13 @@ while(<>) {
     } elsif (/^\s*($idregex)\s+($idregex)/i) { $name=$2; $kind='i';$sig="\tsignature: ($1)";
         # simple instances 'module module_instance_name'
         # eat everything until ; (end of instance)
-        $_.=<> until /;/;
+        $_.=<> until (/;/ or eof);
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
 
     } elsif(/^\s*($idregex)\s+#\((.*)/i) { $kind='i';$sig="\tsignature: ($1)"; $_=$2;
         # module with parameters instanciation 'modname u_inst #('
         # eat everything until ; (end of instance)
-        $_.=<> until /;/;
+        $_.=<> until (/;/ or eof);
         # eat comments
         $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
         $_ =~ m/[)]\s*($idregex)\s*/si;
@@ -144,7 +144,7 @@ while(<>) {
     }elsif(/^\s*($idregex)\s*$/i){
         # single identifier: catchall for instances
         $sig="\tsignature: ($1)";
-        $_.=<> until /;/;
+        $_.=<> until (/;/ or eof);
         $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
         $_ =~ m/[)]\s*($idregex)\s*/si;
         $name=$1;
