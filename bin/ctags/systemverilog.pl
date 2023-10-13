@@ -49,7 +49,7 @@ while(<>) {
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
 
-    } elsif (/^\s*(localparam|parameter)\s+(?:$datatype\s+)?(?:\[[^\]]+\]\s+)?($idregex)\s*=\s*(\S+?)?\s*[;,]?/i) { $name=$2; $kind='g'; $sig="";
+    } elsif (/^\s*(localparam|parameter)\s+(?:$datatype\s+)?(?:\[[^\]]+\]\s+)?($idregex)\s*=\s*($scalar)?\s*[;,]?/i) { $name=$2; $kind='g'; $sig="";
         if ($3 != ""){$sig="\tsignature: ($3)";}
         if ($1 eq "localparam") {$sig = "\taccess:private$sig";}
         else {$sig ="\taccess:public$sig";}
