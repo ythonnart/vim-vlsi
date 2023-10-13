@@ -93,7 +93,7 @@ while(<>) {
         $_=~s/\/\*.*?\*\///sg;$_=~s/\/\/.*//mg;
         #$_=~s/^\s*(wire|reg|logic)\s*\[\s*$idregex\s*:\s*$idregex\s*\]\s*//i;
         $_=~s/\s*(wire|reg|logic)\s*//i;
-        $_=~s/\[[^\]]+\]\s*//i;
+        $_=~s/\[[^\]]+\]\s*//gi;
         $_=~s/\s*;.*//;
         for my $signal (split(/\s*,\s*/s,$_)) {
             next if $signal eq "";
