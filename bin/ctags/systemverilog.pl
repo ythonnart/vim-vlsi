@@ -123,11 +123,14 @@ while(<>) {
 
     } elsif (/^\s*($idregex\s*:\s*)?(for|while|repeat|if|case|null|disable|assign|deassign)\b/i) {
         # skip tag: assign ...
+    }elsif(/^\s*modport\s+($idregex)/i){$kind='P'; $name=$1; $sig="";
+        # interface modports
+        $_.=<> until (/;/ or eof);
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::modports$sig\n";
     } elsif (/^\s*($idregex)\s+($idregex)/i) { $name=$2; $kind='i';$sig="\tsignature: ($1)";
         # simple instances 'module module_instance_name'
         # eat everything until ; (end of instance)
         $_.=<> until (/;/ or eof);
-        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
 
     } elsif(/^\s*($idregex)\s+#\((.*)/i) { $kind='i';$sig="\tsignature: ($1)"; $_=$2;
         # module with parameters instanciation 'modname u_inst #('
