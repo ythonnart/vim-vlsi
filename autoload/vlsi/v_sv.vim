@@ -309,14 +309,14 @@ function! s:instanceSignalFormatter(port)
 endfunction
 
 "Insert entity defined by a:name as instance
-function! vlsi#v_sv#PasteInstanceSignals(name, signal_suffix='')
+function! vlsi#v_sv#PasteSignals(name, signal_suffix='')
     " Find module name or ask for it
     if !exists('g:modules')
         let g:modules = {}
     endif
     let name = a:name
     if name == ''
-        let name = input('Module to paste as signals from? ', '', 'customlist,vlsi#ListModules')
+        let name = input('Module to paste interface signals from? ', '', 'customlist,vlsi#ListModules')
     endif
 
     " get current line
