@@ -1,6 +1,113 @@
 "" Verilog / Systemverilog implementation of VlsiYank / VlsiPaste* 
 " Author: Laurent Alacoque
 
+"Parse interface around cursor
+function! vlsi#v_sv#YankInterface() abort
+    " identifier, number or codegen pattern
+    let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
+    let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
+    let curmodport = ''
+
+    if !exists('g:interfaces')
+        let g:interfaces = {}
+    endif
+    mark z
+    let ifbegin = search('\c^\s*\(interface\)','bcn')
+    let ifend   = search('\c^\s*endinterface','cn')
+    if ifbegin == 0 || ifend == 0
+        return
+    endif
+    let linelist = matchlist(getline(ifbegin),'\c^\s*\(interface\)\s*\(' . idregex . '\)')
+    if empty(linelist)
+        return v:false
+    endif
+    let ifname = linelist[2]
+    "Found interface between ifbegin and ifend with name ifname
+    " Check for overwrite
+    if has_key(g:interfaces,ifname)
+        if input('interface ' . ifname . ' exists! Overwrite (y/n)? ') != 'y'
+            echo '    interface capture abandoned!'
+            return v:true
+        endif
+    endif
+    " Add interface skeleton
+    let g:interfaces[ifname] = { 'generics' : [], 'ports' : [] , 'modports' : {}}
+
+    " scope kind
+    let kind = -1
+    for curline in getline(ifbegin, ifend)
+        " skip comments
+        if curline =~ '^\s*\/\/'
+            continue
+        endif
+        "parameter a = value;
+        let linelist = matchlist(curline,'\c^\s*parameter\s*\(' . idregex . '\)\s*=\s*\([^;,]*\S\)\s*\(;\|,\)')
+        if !empty(linelist)
+            "TODO capture parameter type ?
+            let g:interfaces[ifname].generics += [ { 'name' : linelist[1], 'type' : 'natural', 'value' : linelist[2] } ]
+        endif
+
+        "modport mymodport
+        let linelist = matchlist(curline,'\c^\s*modport\s*\(' . idregex . '\)')
+        if !empty(linelist)
+            let kind = 2
+            let curmodport = linelist[1]
+            let g:interfaces[ifname].modports[curmodport] = {}
+        endif
+
+        " if we're inside a modport we will have signal direction qualification such as
+        " "input hresp,"
+        if kind == 2
+            let linelist = matchlist(curline,'\c^\s*\(input\|output\|inout\)\s\+\(' . idregex . '\)')
+            if !empty(linelist)
+                if linelist[1] =~ "input"
+                    let dir='i'
+                elseif linelist[1] =~ "output"
+                    let dir='o'
+                else
+                    let dir='io'
+                endif
+                let g:interfaces[ifname].modports[curmodport][linelist[2]] = dir
+            endif
+        endif
+
+        "interface signals as in "logic [31:0] signame"
+        let linelist = matchlist(curline,'\c^\s*\(logic\|wire\)\s*\(.*\)$')
+        if !empty(linelist)
+            let kind = 1
+            let port_type = linelist[1]
+            let remainder = linelist[2]
+            " handle range
+            let linelist = matchlist(remainder,'\c^\s*\[\s*\(' . mixregex . '\)\s*:\s*\(' . mixregex . '\)\s*\]\(.*\)$')
+            if !empty(linelist)
+                "io with a range
+                let range = substitute(linelist[1],'\s*$','','') . "{{:}}" . substitute(linelist[2],'\s*$','','')
+                let remainder = linelist[3]
+            else
+                let range = 0
+            endif
+            let curline = remainder
+        else 
+            let port_type = ''
+        endif
+        " normally we only leave the port identifier on the line
+        " if it is a port (kind=1)
+        if kind == 1
+            let portlist = []
+            " add every port identifiers to the portlist variable
+            call substitute(curline, idregex, '\=add(portlist, submatch(0))', 'g')
+            for port in portlist
+                let g:interfaces[ifname].ports += [ { 'name' : port, 'range' : range, 'type' : port_type } ]
+            endfor
+        endif
+        if match(curline,';') != -1
+            let kind = -1
+        endif
+    endfor
+    echo '    Capture for interface ' . ifname . ' successful!'
+    return v:true
+endfunction
+
 "Parse module around cursor
 function! vlsi#v_sv#Yank() abort
     " identifier, number or codegen pattern
@@ -13,7 +120,13 @@ function! vlsi#v_sv#Yank() abort
     let modbegin = search('\c^\s*\(module\)','bcn')
     let modend   = search('\c^\s*endmodule','cn')
     if modbegin == 0 || modend == 0
-        echo 'Could not find module around cursor!'
+        " No module around cursor, look for interface
+        if vlsi#v_sv#YankInterface()
+            " interface found and captured
+            return
+        else
+            echo 'Could not find module nor interface around cursor!'
+        end
         return
     endif
     let linelist = matchlist(getline(modbegin),'\c^\s*\(module\)\s*\(' . idregex . '\)')
