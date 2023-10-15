@@ -1,11 +1,40 @@
 "" Verilog / Systemverilog implementation of VlsiYank / VlsiPaste* 
 " Author: Laurent Alacoque
 
+
 "Parse interface around cursor
+" this alters the g:interfaces structure
+" examples for interface_1.master, interface_1.slave
+" g:interface {
+"       'interface_1' {
+"           'generics' [
+"               {   'name' :'bus_width', 'type':'natural', 'value':32 },
+"               {...}
+"            ],
+"           'ports' [ //always dir 'io'
+"               {   'name':'port_1', 'type':'logic', 'range':'31{{:}}0', 'dir':'io'},
+"               {...}
+"           ],
+"           'modports' {
+"               'master' {
+"                   'port_1': 'i',
+"                   'port_2': 'o',
+"                   ...
+"               },
+"               'slave' {
+"                   'port_1': 'o',
+"                   'port_2': 'i',
+"                   ...
+"               },
+"           }
+" }
+"
 function! vlsi#v_sv#YankInterface() abort
     " identifier, number or codegen pattern
     let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
+    " datatype: logic, wire, AHB_BUS.master
+    let datatype = 'logic\|wire\|\w\+\.\w\+'
     let curmodport = ''
 
     if !exists('g:interfaces')
@@ -72,9 +101,10 @@ function! vlsi#v_sv#YankInterface() abort
         endif
 
         "interface signals as in "logic [31:0] signame"
-        let linelist = matchlist(curline,'\c^\s*\(logic\|wire\)\s*\(.*\)$')
+        let linelist = matchlist(curline,'\c^\s*\('.datatype.'\)\s*\(.*\)$')
         if !empty(linelist)
             let kind = 1
+            let dir='io'
             let port_type = linelist[1]
             let remainder = linelist[2]
             " handle range
@@ -97,7 +127,7 @@ function! vlsi#v_sv#YankInterface() abort
             " add every port identifiers to the portlist variable
             call substitute(curline, idregex, '\=add(portlist, submatch(0))', 'g')
             for port in portlist
-                let g:interfaces[ifname].ports += [ { 'name' : port, 'range' : range, 'type' : port_type } ]
+                let g:interfaces[ifname].ports += [ { 'name' : port, 'dir':'io', 'range' : range, 'type' : port_type } ]
             endfor
         endif
         if match(curline,';') != -1
@@ -108,11 +138,26 @@ function! vlsi#v_sv#YankInterface() abort
     return v:true
 endfunction
 
-"Parse module around cursor
+"Parse module around cursor if no module found, look for an interface instead
+" this alters the g:modules structure (or potentially g:interfaces described above
+" examples for module module_1
+" g:modules {
+"       'module_1' {
+"           'generics' [
+"               {   'name' :'bus_width', 'type':'natural', 'value':32 },
+"               {...}
+"            ],
+"           'ports' [ 
+"               {   'name':'port_1', 'type':'logic', 'range':'31{{:}}0', 'dir':'i'},
+"               {...}
+"           ],
+" }
 function! vlsi#v_sv#Yank() abort
     " identifier, number or codegen pattern
     let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
+    " datatype: logic, wire, AHB_BUS.master
+    let datatype = 'logic\|wire\|\w\+\.\w\+'
     if !exists('g:modules')
         let g:modules = {}
     endif
@@ -175,26 +220,29 @@ function! vlsi#v_sv#Yank() abort
             endif
 
             let remainder = linelist[2]
-            " handle optional port type
-            let linelist = matchlist(remainder,'\c^\s*\(logic\|wire\)\s*\(.*\)$')
-            if !empty(linelist)
-                let port_type = linelist[1]
-                let remainder = linelist[2]
-            else 
-                let port_type = ''
-            endif
-            " handle range
-            let linelist = matchlist(remainder,'\c^\s*\[\s*\(' . mixregex . '\)\s*:\s*\(' . mixregex . '\)\s*\]\(.*\)$')
-            if !empty(linelist)
-                "io with a range
-                let range = substitute(linelist[1],'\s*$','','') . "{{:}}" . substitute(linelist[2],'\s*$','','')
-                let remainder = linelist[3]
-            else
-                let range = 0
-            endif
-            let curline = remainder
-            " normally we only leave the port identifier on the line
+        else
+            let dir = 'io'
+            let remainder = curline
         endif
+        " handle optional port type
+        let linelist = matchlist(remainder,'\c^\s*\('.datatype.'\)\s*\(.*\)$')
+        if !empty(linelist)
+            let port_type = linelist[1]
+            let remainder = linelist[2]
+        else 
+            let port_type = ''
+        endif
+        " handle range
+        let linelist = matchlist(remainder,'\c^\s*\[\s*\(' . mixregex . '\)\s*:\s*\(' . mixregex . '\)\s*\]\(.*\)$')
+        if !empty(linelist)
+            "io with a range
+            let range = substitute(linelist[1],'\s*$','','') . "{{:}}" . substitute(linelist[2],'\s*$','','')
+            let remainder = linelist[3]
+        else
+            let range = 0
+        endif
+        let curline = remainder
+        " normally we only leave the port identifier on the line
         " if it is a port (kind=1)
         if kind == 1
             let portlist = []
@@ -234,6 +282,13 @@ function! s:portIterator(moduleName,formatterFunctionName, suffix='')
                         \ 'max_sizes'   :  l:elem_max_size
                         \ }
 
+                " check for complex type
+                if item.type =~ '\w\+\.\w\+'
+                    " interface type
+                    " TODO allow expand when the type is in g:interfaces
+                    let l:portdef.type = item.type
+                    let l:portdef.dir  = ''
+                endif
                 " check for range in the form 23{{:}}43
                 let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
                 if !empty(l:rangelist)
