@@ -41,8 +41,8 @@ function! vlsi#v_sv#YankInterface() abort
         let g:interfaces = {}
     endif
     mark z
-    let ifbegin = search('\c^\s*\(interface\)','bcn')
-    let ifend   = search('\c^\s*endinterface','cn')
+    let ifbegin = search('\c^\s*\(interface\)','bcnW')
+    let ifend   = search('\c^\s*endinterface','cnW')
     if ifbegin == 0 || ifend == 0
         return
     endif
@@ -162,8 +162,8 @@ function! vlsi#v_sv#Yank() abort
         let g:modules = {}
     endif
     mark z
-    let modbegin = search('\c^\s*\(module\)','bcn')
-    let modend   = search('\c^\s*endmodule','cn')
+    let modbegin = search('\c^\s*\(module\)','bcnW')
+    let modend   = search('\c^\s*endmodule','cnW')
     if modbegin == 0 || modend == 0
         " No module around cursor, look for interface
         if vlsi#v_sv#YankInterface()

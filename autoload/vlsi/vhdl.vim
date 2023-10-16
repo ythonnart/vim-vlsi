@@ -15,8 +15,8 @@ function! vlsi#vhdl#Yank() abort
     let g:modules = {}
   endif
   mark z
-  let entbegin = search('\c^\s*\(entity\|component\)','bcn')
-  let entend   = search('\c^\s*end','cn')
+  let entbegin = search('\c^\s*\(entity\|component\)','bcnW')
+  let entend   = search('\c^\s*end','cnW')
   if entbegin == 0 || entend == 0
     echo 'Could not find entity or component around cursor!'
     return
