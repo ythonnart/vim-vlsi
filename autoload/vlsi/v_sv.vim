@@ -1,6 +1,41 @@
 "" Verilog / Systemverilog implementation of VlsiYank / VlsiPaste* 
 " Author: Laurent Alacoque
 
+" format a range from a port definition
+function! vlsi#v_sv#formatRange(port) dict
+    if a:port.range_start == ''
+        return ''
+    endif
+    return '[' .. a:port.range_start .. ':' .. a:port.range_end .. ']'
+endfunction
+
+" define the formatting function for instance IOs
+function! s:instanceIOFormatter(port)
+    let l:format = printf("    .%%-%ds (%%-%ds)",
+                \ a:port.max_sizes.name,
+                \ a:port.max_sizes.name + len(a:port.suffix) +len(a:port.prefix))
+    return printf(l:format, a:port.name, a:port.prefix .. a:port.name .. a:port.suffix)
+endfunction
+
+" define the formatting function for instance signals
+function! s:instanceSignalFormatter(port)
+    " logic [31:0] signame
+    let l:format = printf("%%-%ds %%-%ds %%s",
+                \ a:port.max_sizes.type,
+                \ a:port.max_sizes.range)
+    return printf(l:format, a:port.type, a:port.config.formatRange(a:port), a:port.prefix .. a:port.name .. a:port.suffix)
+endfunction
+
+" define the formatting function for module IOs
+function! s:moduleIOFormatter(port)
+    let l:format = printf("    %%-%ds %%-%ds %%-%ds %%s",
+                \ a:port.max_sizes.dir,
+                \ a:port.max_sizes.type,
+                \ a:port.max_sizes.range)
+    return printf(l:format, a:port.dir, a:port.type, a:port.config.formatRange(a:port), a:port.prefix .. a:port.name .. a:port.suffix)
+endfunction
+
+
 
 "Parse interface around cursor
 " this alters the g:interfaces structure
@@ -276,132 +311,6 @@ function! vlsi#v_sv#Yank() abort
     echo '    Capture for module ' . modname . ' successful!'
 endfunction
 
-" this function iterates over ports and format them using 'formatterFunctionName' function
-" this allows code factorization for the Paste* functions
-" @arg portList (list of dict) the module ports definition
-" @arg formatterFunctionName (str) the formatter function that will be used
-" @arg prefix (str) an optionnal prefix for all signals (used in instance and signal pasting)
-" @arg suffix (str) an optionnal suffix for all signals (used in instance and signal pasting)
-" @return a list of ports definition as strings
-function! s:portIterator(portList,formatterFunctionName, suffix='', prefix='', expand=v:false, elem_max_size = {'dir':0, 'name':0, 'range':0, 'type':0})
-    if !empty(a:portList)
-        " for each port get the max size of each element dir, name, range, type
-        let l:ports = []
-        for l:state in ['align-pass', 'generate-pass']
-            for l:item in a:portList
-                let l:portdef = {
-                        \ 'dir'         :  s:formatDirection(l:item.dir),
-                        \ 'name'        :  l:item.name,
-                        \ 'range_start' :  '',
-                        \ 'range_end'   :  '',
-                        \ 'type'        :  (&filetype == 'verilog' ? 'wire' : 'logic'),
-                        \ 'suffix'      :  a:suffix,
-                        \ 'prefix'      :  a:prefix,
-                        \ 'max_sizes'   :  a:elem_max_size
-                        \ }
-
-                " check for complex type
-                let interface_elements = matchlist(item.type,'\c^\(\w\+\)\.\(\w\+\)')
-                if !empty(interface_elements)
-                    " interface type
-                    let interface_name = interface_elements[1]
-                    let interface_modport = interface_elements[2]
-                    " default is to copy the type
-                    let l:portdef.type = item.type
-                    let l:portdef.dir  = ''
-                    " expand interface ports if necessary or asked
-                    if a:expand || &filetype == 'verilog'
-                        "We should expand the interface
-                        if exists('g:interfaces') && has_key(g:interfaces,interface_name)
-                            if has_key(g:interfaces[interface_name].modports, interface_modport)
-                                "loop over interface.modports ports
-                                if l:state == 'generate-pass'
-                                    let l:if_ports = s:portIterator(
-                                                \ g:interfaces[interface_name].modports[interface_modport],
-                                                \ a:formatterFunctionName, 
-                                                \ a:suffix, a:prefix .. item.name .. "_", a:expand, a:elem_max_size)
-                                    let l:if_ports[0] =  "    // Expansion of interface "..item.type .. " start\x01" .. l:if_ports[0]
-                                    let l:if_ports[-1] = l:if_ports[-1] .. ",\x01    // Expansion of interface "..item.type .. " end"
-                                    let l:ports = extend(l:ports, l:if_ports)
-                                    continue
-                                else
-                                    " align-pass
-                                    let l:portdef.type = (&filetype == 'verilog' ? 'wire' : 'logic')
-                                    let l:portdef.dir  = ''
-                                endif
-                            else "interface modport doesn't exist
-                                if l:state == 'generate-pass'
-                                    "no modport of this name for this interface
-                                    echohl WarningMsg
-                                    echo 'Interface expansion: Unknown modport ' .. interface_modport
-                                                \ .. ' for interface ' .. interface_name
-                                    echohl None
-                                endif
-                            endif "interface modport
-                        else "interface name doesn't exist
-                            if l:state == 'generate-pass'
-                                " no interface of this name
-                                echohl WarningMsg
-                                echo 'Interface expansion: Unknown interface ' .. interface_name .. ' (did you VlsiYank it?)'
-                                echohl None
-                            endif
-                        endif " interface name
-                    endif "expand
-                endif
-
-                " check for range in the form 23{{:}}43
-                let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
-                if !empty(l:rangelist)
-                    let l:portdef.range_start = l:rangelist[1]
-                    let l:portdef.range_end   = l:rangelist[2]
-                endif
-
-                if l:state == 'generate-pass'
-                    " Call formatter to format l:portdef
-                    " e.g. moduleIOFormatter(l:portdef)
-                    let l:port_full_def = eval("".. a:formatterFunctionName .. "(" .. string(l:portdef) .. ')')
-
-                    " Add returned string to the list of ports
-                    call add(l:ports, l:port_full_def)
-                elseif l:state == 'align-pass'
-                    " only measure sizes
-                    let a:elem_max_size.dir   = (a:elem_max_size.dir   < len(l:portdef.dir ) ? len(l:portdef.dir ) : a:elem_max_size.dir)
-                    let a:elem_max_size.type  = (a:elem_max_size.type  < len(l:portdef.type) ? len(l:portdef.type) : a:elem_max_size.type)
-                    let a:elem_max_size.name  = (a:elem_max_size.name  < len(l:portdef.name) ? len(l:portdef.name) : a:elem_max_size.name)
-                    let l:range_size = len(s:formatRange(l:portdef))
-                    let a:elem_max_size.range = (a:elem_max_size.range < l:range_size   ? l:range_size   : a:elem_max_size.range)
-                endif
-            endfor "Foreach port
-        endfor " align-pass / generate-pass
-    endif
-    return l:ports
-endfunction
-
-" format a range from a port definition
-function! s:formatRange(port)
-    if a:port.range_start == ''
-        return ''
-    endif
-
-    return '[' .. a:port.range_start .. ':' .. a:port.range_end .. ']'
-endfunction
-
-" format a port direction
-function! s:formatDirection(module_port_dir)
-    " transform standardized kinds 'i','o','io' into 6 letters verilog directions
-    let l:kind2dir = {'i':'input', 'o':'output', 'io': 'inout'}
-    return kind2dir[a:module_port_dir]
-endfunction
-
-" define the formatting function for module IOs
-function! s:moduleIOFormatter(port)
-    let l:format = printf("    %%-%ds %%-%ds %%-%ds %%s",
-                \ a:port.max_sizes.dir,
-                \ a:port.max_sizes.type,
-                \ a:port.max_sizes.range)
-    return printf(l:format, a:port.dir, a:port.type, s:formatRange(a:port), a:port.prefix .. a:port.name .. a:port.suffix)
-endfunction
-
 
 "Insert entity defined a:name as 'module'
 function! vlsi#v_sv#PasteAsModule(name)
@@ -441,7 +350,8 @@ function! vlsi#v_sv#PasteAsModule(name)
         let l:moduledef .= " (\x01"
 
         "retrieve ports (using vlsi#v_sv#moduleIOFormatter formatter)
-        let l:ports = s:portIterator(g:modules[name].ports,'s:moduleIOFormatter')
+        "let l:ports = vlsi#portIterator(g:modules[name].ports,function('s:moduleIOFormatter'))
+        let l:ports = vlsi#portIterator(g:modules[name].ports,'-{dir} {type} "{range}" [{range_start}:{range_end}]  @{type}')
 
         "join the port definition list with ,\x01 marker
         let l:moduledef .= join(l:ports,",\x01")
@@ -461,13 +371,6 @@ function! vlsi#v_sv#PasteAsModule(name)
     endif
 endfunction
 
-" define the formatting function for instance IOs
-function! s:instanceIOFormatter(port)
-    let l:format = printf("    .%%-%ds (%%-%ds)",
-                \ a:port.max_sizes.name,
-                \ a:port.max_sizes.name + len(a:port.suffix) +len(a:port.prefix))
-    return printf(l:format, a:port.name, a:port.prefix .. a:port.name .. a:port.suffix)
-endfunction
 
 "Insert entity defined by a:name as instance
 function! vlsi#v_sv#PasteAsInstance(name, signal_suffix='')
@@ -508,7 +411,7 @@ function! vlsi#v_sv#PasteAsInstance(name, signal_suffix='')
         let l:instancedef .= " u_" .. name .. a:signal_suffix .. " (\x01"
 
         "retrieve ports (using s:instanceIOFormatter formatter)
-        let l:ports = s:portIterator(g:modules[name].ports,'s:instanceIOFormatter',a:signal_suffix )
+        let l:ports = vlsi#portIterator(g:modules[name].ports,function('s:instanceIOFormatter'), a:signal_suffix )
 
         "join the port definition list with ,\x01 marker
         let l:instancedef .= join(l:ports,",\x01")
@@ -527,14 +430,6 @@ function! vlsi#v_sv#PasteAsInstance(name, signal_suffix='')
 endfunction
 
 
-" define the formatting function for instance signals
-function! s:instanceSignalFormatter(port)
-    " logic [31:0] signame
-    let l:format = printf("%%-%ds %%-%ds %%s",
-                \ a:port.max_sizes.type,
-                \ a:port.max_sizes.range)
-    return printf(l:format, a:port.type, s:formatRange(a:port), a:port.prefix .. a:port.name .. a:port.suffix)
-endfunction
 
 "Insert entity defined by a:name as instance
 function! vlsi#v_sv#PasteSignals(name, signal_suffix='')
@@ -557,7 +452,7 @@ function! vlsi#v_sv#PasteSignals(name, signal_suffix='')
         let l:signalsdef .= '// Interface signals for u_'  .. name .. a:signal_suffix .. "\x01"
 
         "retrieve ports (using s:instanceIOFormatter formatter)
-        let l:ports = s:portIterator(g:modules[name].ports,'s:instanceSignalFormatter',a:signal_suffix)
+        let l:ports = vlsi#portIterator(g:modules[name].ports,function('s:instanceSignalFormatter'),a:signal_suffix)
 
         "join the port definition list with ,\x01 marker
         let l:signalsdef .= join(l:ports,";\x01")

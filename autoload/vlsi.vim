@@ -111,3 +111,149 @@ endfunction
 function! vlsi#PasteAsInstanceNotDefined(...)
     echoerr 'VlsiPasteAsInstance command not defined for this filetype!'
 endfunction
+
+
+" format a dict based on a pattern string
+" item (dict) a 'key' : value dictionary
+" format (str or function)
+"    - if str: will replace '{key}' by the corresponding item value
+"          example " {dir} {type} {name}"
+"    - if func: use function to format item
+"          example function("myFunc")
+"          will call myFunc(item)
+function! vlsi#basicFormat(item, format)
+    if type(a:format) == v:t_func
+        return a:format(a:item)
+    elseif type(a:format) == v:t_string
+        let format = a:format
+        let item   = a:item
+        if has_key(item,'max_sizes')
+            " has max_sizes, reformat fixed size = item.max_sizes.key
+            let keys = []
+            " add any keys to keys
+            call substitute(format, '{\(\w\+\)}', '\=add(keys, submatch(1))', 'g')
+            for key in keys
+                if has_key(item.max_sizes,key)
+                    let l:size = item.max_sizes[key]
+                    "left align string of fixed length
+                    let l:fmt = printf("%%-%ds",l:size) " %-8s
+                else 
+                    let l:size = 0
+                    let l:fmt = "%s"
+                endif
+                let l:value = item[key]
+                let item[key] = printf(l:fmt,l:value) " '23      '
+            endfor
+        endif
+
+        " substitute every occurence of {key} with the value item[key] into str "format"
+        return substitute(format,'{\(\w\+\)}','\=item[submatch(1)]','g')
+        endif
+    else
+        echoerr "Invalid type (should be func or string)"
+    endif
+endfunction
+
+" this function iterates over ports and format them using 'formatterFunctionName' function
+" this allows code factorization for the Paste* functions
+" @arg portList (list of dict) the module ports definition
+" @arg formatter (function) the formatter function that will be used
+" @arg defaults (dict) contains keys for langage : comment:"//", type:"wire', kind2dir:{'i':'input',... formatRange:function('formatter')
+" @arg prefix (str) an optionnal prefix for all signals (used in instance and signal pasting)
+" @arg suffix (str) an optionnal suffix for all signals (used in instance and signal pasting)
+" @return a list of ports definition as strings
+function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:false, elem_max_size = {'dir':0, 'name':0, 'range':0, 'type':0})
+    if !empty(a:portList)
+        let l:ports = []
+        for l:state in ['align-pass', 'generate-pass']
+            for l:item in a:portList
+                let l:portdef = {
+                        \ 'dir'         :  b:vlsi_config.kind2dir[l:item.dir],
+                        \ 'name'        :  l:item.name,
+                        \ 'range_start' :  '',
+                        \ 'range_end'   :  '',
+                        \ 'range'       :  '',
+                        \ 'type'        :  b:vlsi_config.type,
+                        \ 'suffix'      :  a:suffix,
+                        \ 'prefix'      :  a:prefix,
+                        \ 'max_sizes'   :  a:elem_max_size,
+                        \ 'config'      :  b:vlsi_config
+                        \ }
+                " check for complex type
+                let interface_elements = matchlist(item.type,'\c^\(\w\+\)\.\(\w\+\)')
+                if !empty(interface_elements)
+                    " interface type
+                    let interface_name = interface_elements[1]
+                    let interface_modport = interface_elements[2]
+                    " default is to copy the type
+                    let l:portdef.type = item.type
+                    let l:portdef.dir  = ''
+                    " expand interface ports if necessary or asked
+                    if a:expand || &filetype == 'verilog'
+                        "We should expand the interface
+                        if exists('g:interfaces') && has_key(g:interfaces,interface_name)
+                            if has_key(g:interfaces[interface_name].modports, interface_modport)
+                                "loop over interface.modports ports
+                                if l:state == 'generate-pass'
+                                    let l:if_ports = vlsi#portIterator(
+                                                \ g:interfaces[interface_name].modports[interface_modport],
+                                                \ a:formatter,
+                                                \ a:suffix, a:prefix .. item.name .. "_", a:expand, a:elem_max_size)
+                                    let l:if_ports[0] =  "    ".. b:vlsi_config.comment .." Expansion of interface "..item.type .. " start\x01" .. l:if_ports[0]
+                                    let l:if_ports[-1] = l:if_ports[-1] .. ",\x01    ".. b:vlsi_config.comment .." Expansion of interface "..item.type .. " end"
+                                    let l:ports = extend(l:ports, l:if_ports)
+                                    continue
+                                else
+                                    " align-pass
+                                    let l:portdef.type = b:vlsi_config.type
+                                    let l:portdef.dir  = ''
+                                endif
+                            else "interface modport doesn't exist
+                                if l:state == 'generate-pass'
+                                    "no modport of this name for this interface
+                                    echohl WarningMsg
+                                    echo 'Interface expansion: Unknown modport ' .. interface_modport
+                                                \ .. ' for interface ' .. interface_name
+                                    echohl None
+                                endif
+                            endif "interface modport
+                        else "interface name doesn't exist
+                            if l:state == 'generate-pass'
+                                " no interface of this name
+                                echohl WarningMsg
+                                echo 'Interface expansion: Unknown interface ' .. interface_name .. ' (did you VlsiYank it?)'
+                                echohl None
+                            endif
+                        endif " interface name
+                    endif "expand
+                endif
+
+                " check for range in the form 23{{:}}43
+                let l:rangelist = matchlist(l:item.range, '\(.*\){{:}}\(.*\)')
+                if !empty(l:rangelist)
+                    let l:portdef.range_start = l:rangelist[1]
+                    let l:portdef.range_end   = l:rangelist[2]
+                    " Add formatted range
+                    let l:portdef.range = b:vlsi_config.formatRange(l:portdef)
+                endif
+
+                if l:state == 'generate-pass'
+                    " Call formatter to format l:portdef
+                    " e.g. moduleIOFormatter(l:portdef)
+                    let l:port_full_def = vlsi#basicFormat(l:portdef,a:formatter)
+
+                    " Add returned string to the list of ports
+                    call add(l:ports, l:port_full_def)
+                elseif l:state == 'align-pass'
+                    " only measure sizes
+                    let a:elem_max_size.dir   = (a:elem_max_size.dir   < len(l:portdef.dir ) ? len(l:portdef.dir ) : a:elem_max_size.dir)
+                    let a:elem_max_size.type  = (a:elem_max_size.type  < len(l:portdef.type) ? len(l:portdef.type) : a:elem_max_size.type)
+                    let a:elem_max_size.name  = (a:elem_max_size.name  < len(l:portdef.name) ? len(l:portdef.name) : a:elem_max_size.name)
+                    let l:range_size = len(b:vlsi_config.formatRange(l:portdef))
+                    let a:elem_max_size.range = (a:elem_max_size.range < l:range_size   ? l:range_size   : a:elem_max_size.range)
+                endif
+            endfor "Foreach port
+        endfor " align-pass / generate-pass
+    endif
+    return l:ports
+endfunction
