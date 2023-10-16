@@ -27,7 +27,7 @@ function! vlsi#Bindings()
     command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsInstance   :call b:VlsiPasteAsInstance('<args>')
 
     " <Plug> Mappings
-    noremap <silent> <Plug>VlsiYank              :call b:VlsiYank     ('')<CR>
+    noremap <silent> <Plug>VlsiYank              :call b:VlsiYank     ()<CR>
     noremap <silent> <Plug>VlsiList              :echo join(vlsi#ListModules('<args>','',''),' ')<CR>
     noremap <silent> <Plug>VlsiDefineNew         :call vlsi#DefineNew ()<CR>
     noremap <silent> <Plug>VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition   ('')<CR>
@@ -38,8 +38,8 @@ function! vlsi#Bindings()
     if !hasmapto('<Plug>VlsiDefineNew') &&  maparg('<M-S-F6>','n') ==# ''
         nmap <M-S-F6>  <Plug>VlsiDefineNew
     endif
-    if !hasmapto('<Plug>VlsiYank') &&  maparg('<M-F6>','n') ==# ''
-        nmap <M-F6>  <Plug>VlsiYank
+    if !hasmapto('<Plug>VlsiYank') &&  maparg('<F6>','n') ==# ''
+        nmap <F6>  <Plug>VlsiYank
     endif
     if !hasmapto('<Plug>VlsiPasteAsDefinition') &&  maparg('<S-F6>','n') ==# ''
         nmap <S-F6>  <Plug>VlsiPasteAsDefinition
@@ -47,8 +47,8 @@ function! vlsi#Bindings()
     if !hasmapto('<Plug>VlsiPasteAsInterface') &&  maparg('<C-F6>','n') ==# ''
         nmap <C-F6>  <Plug>VlsiPasteAsInterface
     endif
-    if !hasmapto('<Plug>VlsiPasteAsInstance') &&  maparg('<F6>','n') ==# ''
-        nmap <F6>  <Plug>VlsiPasteAsInstance
+    if !hasmapto('<Plug>VlsiPasteAsInstance') &&  maparg('<M-F6>','n') ==# ''
+        nmap <M-F6>  <Plug>VlsiPasteAsInstance
     endif
 endfunction
 
