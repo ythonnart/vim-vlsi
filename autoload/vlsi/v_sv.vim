@@ -60,7 +60,7 @@ function! vlsi#v_sv#YankInterface() abort
         endif
     endif
     " Add interface skeleton
-    let g:interfaces[ifname] = { 'generics' : [], 'ports' : [] , 'modports' : {}}
+    let g:interfaces[ifname] = { 'generics' : [], 'ports' : [] , 'modports' : {}, 'lang':'systemverilog'}
 
     " scope kind
     let kind = -1
@@ -189,7 +189,7 @@ function! vlsi#v_sv#Yank() abort
         endif
     endif
     " Add module skeleton
-    let g:modules[modname] = { 'generics' : [], 'ports' : [] }
+    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : &filetype }
 
     " scope kind
     let kind = -1
