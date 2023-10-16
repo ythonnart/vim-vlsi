@@ -350,8 +350,7 @@ function! vlsi#v_sv#PasteAsModule(name)
         let l:moduledef .= " (\x01"
 
         "retrieve ports (using vlsi#v_sv#moduleIOFormatter formatter)
-        "let l:ports = vlsi#portIterator(g:modules[name].ports,function('s:moduleIOFormatter'))
-        let l:ports = vlsi#portIterator(g:modules[name].ports,'-{dir} {type} "{range}" [{range_start}:{range_end}]  @{type}')
+        let l:ports = vlsi#portIterator(g:modules[name].ports,function('s:moduleIOFormatter'))
 
         "join the port definition list with ,\x01 marker
         let l:moduledef .= join(l:ports,",\x01")
