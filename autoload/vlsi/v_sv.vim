@@ -312,7 +312,7 @@ function! s:portIterator(portList,formatterFunctionName, suffix='', prefix='', e
                     " expand interface ports if necessary or asked
                     if a:expand || &filetype == 'verilog'
                         "We should expand the interface
-                        if has_key(g:interfaces,interface_name)
+                        if exists('g:interfaces') && has_key(g:interfaces,interface_name)
                             if has_key(g:interfaces[interface_name].modports, interface_modport)
                                 "loop over interface.modports ports
                                 if l:state == 'generate-pass'
@@ -329,7 +329,7 @@ function! s:portIterator(portList,formatterFunctionName, suffix='', prefix='', e
                                     let l:portdef.type = (&filetype == 'verilog' ? 'wire' : 'logic')
                                     let l:portdef.dir  = ''
                                 endif
-                            else
+                            else "interface modport doesn't exist
                                 if l:state == 'generate-pass'
                                     "no modport of this name for this interface
                                     echohl WarningMsg
@@ -337,15 +337,15 @@ function! s:portIterator(portList,formatterFunctionName, suffix='', prefix='', e
                                                 \ .. ' for interface ' .. interface_name
                                     echohl None
                                 endif
-                            endif
-                        else
+                            endif "interface modport
+                        else "interface name doesn't exist
                             if l:state == 'generate-pass'
                                 " no interface of this name
                                 echohl WarningMsg
                                 echo 'Interface expansion: Unknown interface ' .. interface_name .. ' (did you VlsiYank it?)'
                                 echohl None
                             endif
-                        end
+                        endif " interface name
                     endif "expand
                 endif
 
