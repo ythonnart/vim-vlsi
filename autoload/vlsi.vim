@@ -260,8 +260,98 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                         endif
                     endfor "align-pass
                 endif "field size computation / port generation
+
             endfor "Foreach port
         endfor " align-pass / generate-pass
     endif
     return l:ports
+endfunction
+
+
+" Paste module 'moduleName' using patterns defined in patterns
+" patterns should look like this dict, where each line is either
+" a string (all {key} will be replaced by the corresponding item[key] value)
+" or a function that will get item and should return a string
+" NOTE: "\x01" char will be replaced by newlines
+" example pattern for verilog module
+"     #{
+"        \ start_module          : "module {module_name}",
+"
+"            \ start_generics        : " #(\x01",
+"               \ generics_item_func    : "    parameter {name} = {value}",
+"               \ generics_sep          : ",\x01",
+"            \ end_generics          : "\x01    )",
+"
+"            \ start_ports           : " (\x01",
+"               \ port_list_func        : function('s:moduleIOFormatter'),
+"               \ port_list_sep         : ",\x01",
+"            \ end_ports             : "\x01);\x01",
+"        \ end_module            : "\x01endmodule //{module_name}\x01",
+"    \ }
+"
+" the (start|end)_* formatters are called with #{module_name: 'module name', prefix:'...', suffix:'...'} argument
+" the generics_item_func formatter will be called with g:modules.moduleName.generics items
+" the port_list_func formatter will be called by vlsi#portIterator enhanced g:modules.moduleName.ports
+"
+function! vlsi#GenericPaste(patterns, moduleName, suffix='', prefix='', expand=v:false)
+    let result = ""
+    " Fool-proof
+    if !exists('g:modules')
+        let g:modules = {}
+    endif
+
+    " Find module name or ask for it
+    let moduleName = a:moduleName
+    if moduleName == ''
+        let moduleName = input('Module to paste ? ', '', 'customlist,vlsi#ListModules')
+        echo "\r"
+    endif
+
+    if !has_key(g:modules,moduleName)
+        echohl ErrorMsg
+        echo "Module " .. moduleName .. " doesn't exist"
+        echohl WarningMsg
+        echo "(Maybe VlsiYank it first?)"
+        echohl None
+        return
+    endif
+
+    let mod_def = g:modules[moduleName]
+    let mod_val = {'module_name': moduleName, 'prefix':a:prefix, 'suffix':a:suffix}
+
+    " module start
+    let result .= vlsi#basicFormat(mod_val,a:patterns.start_module)
+
+    " generics
+    if has_key(mod_def,'generics') && !empty(mod_def.generics)
+        " generics
+        let result .= vlsi#basicFormat(mod_val,a:patterns.start_generics)
+        let generics_lines = []
+        " iterate through generics
+        for item in mod_def.generics
+            call add(l:generics_lines, vlsi#basicFormat(item,a:patterns.generics_item_func))
+        endfor
+        " assemble generics
+        let result .= join(generics_lines, a:patterns.generics_sep)
+        " end generics
+        let result .= vlsi#basicFormat(mod_val,a:patterns.end_generics)
+    endif
+
+    " ports
+    if has_key(mod_def,'ports') && !empty(mod_def.ports)
+        let result .= vlsi#basicFormat(mod_val,a:patterns.start_ports)
+        let port_lines = vlsi#portIterator(
+            \ mod_def.ports,
+            \ a:patterns.port_list_func,
+            \ a:suffix, a:prefix, a:expand)
+        " assemble ports
+        let result .= join(port_lines, a:patterns.port_list_sep)
+        let result .= vlsi#basicFormat(mod_val,a:patterns.end_ports)
+    endif
+
+    " end module
+    let result .= vlsi#basicFormat(mod_val,a:patterns.end_module)
+
+    " append result at cursor position
+    call append(line('.'), split(l:result,"\x01") )
 endfunction

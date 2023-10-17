@@ -1,15 +1,16 @@
 " Load specific functions for verilog entity yank/paste
 let b:VlsiYank              = function('vlsi#v_sv#Yank')
-let b:VlsiPasteAsDefinition = function('vlsi#v_sv#PasteAsModule')
-let b:VlsiPasteAsInstance   = function('vlsi#v_sv#PasteAsInstance')
+let b:VlsiPasteAsDefinition = function('vlsi#GenericPaste',[vlsi#v_sv#formatPatterns.definition])
+let b:VlsiPasteAsInstance   = function('vlsi#GenericPaste',[vlsi#v_sv#formatPatterns.instance])
+let b:VlsiPasteSignals      = function('vlsi#GenericPaste',[vlsi#v_sv#formatPatterns.signals])
 let b:vlsi_config           = #{
-            \ language: 'verilog',
-            \ comment : "//",
-            \ default_scalar_type:'wire',
-            \ default_vector_type:'wire',
-            \ kind2dir : #{i:'input', o:'output', io:'inout'},
-            \ formatRange:function("vlsi#v_sv#formatRange")}
- 
+            \ language            : 'verilog',
+            \ comment             : "//",
+            \ default_scalar_type : 'wire',
+            \ default_vector_type : 'wire',
+            \ kind2dir            : #{i: 'input', o: 'output', io: 'inout'},
+            \ formatRange         : function("vlsi#v_sv#formatRange")}
+
 " Create default bindings
 call vlsi#Bindings()
 

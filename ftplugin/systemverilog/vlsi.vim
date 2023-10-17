@@ -1,7 +1,8 @@
 " Load specific functions for VHDL entity yank/paste
 let b:VlsiYank              = function('vlsi#v_sv#Yank')
-let b:VlsiPasteAsDefinition = function('vlsi#v_sv#PasteAsModule')
-let b:VlsiPasteAsInstance   = function('vlsi#v_sv#PasteAsInstance')
+let b:VlsiPasteAsDefinition = function('vlsi#GenericPaste',[vlsi#v_sv#formatPatterns.definition])
+let b:VlsiPasteAsInstance   = function('vlsi#GenericPaste',[vlsi#v_sv#formatPatterns.instance])
+let b:VlsiPasteSignals      = function('vlsi#GenericPaste',[vlsi#v_sv#formatPatterns.signals])
 let b:vlsi_config           = #{
             \ language : "systemverilog",
             \ comment : "//",

@@ -35,6 +35,44 @@ function! s:moduleIOFormatter(port)
     return printf(l:format, a:port.dir, a:port.type, a:port.config.formatRange(a:port), a:port.prefix .. a:port.name .. a:port.suffix)
 endfunction
 
+let vlsi#v_sv#formatPatterns = #{
+   \     definition : #{
+   \         start_module              : "module {module_name}",
+   \             start_generics        : " #(\x01",
+   \                generics_item_func : "    parameter {name} = {value}",
+   \                generics_sep       : ",\x01",
+   \             end_generics          : "\x01    )",
+   \             start_ports           : " (\x01",
+   \                port_list_func     : function('s:moduleIOFormatter'),
+   \                port_list_sep      : ",\x01",
+   \             end_ports             : "\x01);\x01",
+   \         end_module                : "\x01endmodule //{module_name}\x01",
+   \     },
+   \     instance : #{
+   \         start_module              : "{module_name}",
+   \             start_generics        : " #(\x01",
+   \                generics_item_func : "    .{name} ({value})",
+   \                generics_sep       : ",\x01",
+   \             end_generics          : "\x01  )",
+   \             start_ports           : " u_{prefix}{module_name}{suffix} (\x01",
+   \                port_list_func     : function('s:instanceIOFormatter'),
+   \                port_list_sep      : ",\x01",
+   \             end_ports             : "\x01)",
+   \         end_module                : ";\x01\x01",
+   \     },
+   \     signals  : #{
+   \         start_module              : '',
+   \             start_generics        : '',
+   \                generics_item_func : '',
+   \                generics_sep       : '',
+   \             end_generics          : '',
+   \             start_ports           : "// interface signals for {prefix}{module_name}{suffix}\x01",
+   \                port_list_func     : function('s:instanceSignalFormatter'),
+   \                port_list_sep      : ";\x01",
+   \             end_ports             : ";\x01",
+   \         end_module                : "// end of signals for {prefix}{module_name}{suffix}\x01\x01",
+   \     },
+   \ }
 
 
 "Parse interface around cursor
@@ -310,160 +348,4 @@ function! vlsi#v_sv#Yank() abort
         endif
     endfor
     echo '    Capture for module ' . modname . ' successful!'
-endfunction
-
-
-"Insert entity defined a:name as 'module'
-function! vlsi#v_sv#PasteAsModule(name)
-    " Find module name or ask for it
-    if !exists('g:modules')
-        let g:modules = {}
-    endif
-    let name = a:name
-    if name == ''
-        let name = input('Module to paste as module? ', '', 'customlist,vlsi#ListModules')
-    endif
-
-    " get current line
-    let lnum = line('.')
-
-    " write module definition into moduledef string
-    let l:moduledef = ''
-    if has_key(g:modules, name)
-        " start the module, NOTE: we use \x01 char for newlines marker
-        let l:moduledef .= 'module '. name 
-
-        if !empty(g:modules[name].generics) 
-            " start generics
-            let l:moduledef .= " #(\x01"
-            " Handle generics
-            let l:gen_list = []
-            for item in g:modules[name].generics
-                call add(l:gen_list, '    parameter ' .. item.name .. " = " .. item.value)
-            endfor
-            "concatenate generics using comma and eol
-            let l:moduledef .= join(l:gen_list,",\x01")
-            " end generics
-            let l:moduledef .= "\x01)"
-        endif
-
-        " start module ports
-        let l:moduledef .= " (\x01"
-
-        "retrieve ports (using vlsi#v_sv#moduleIOFormatter formatter)
-        let l:ports = vlsi#portIterator(g:modules[name].ports,function('s:moduleIOFormatter'))
-
-        "join the port definition list with ,\x01 marker
-        let l:moduledef .= join(l:ports,",\x01")
-
-        "skip a line and close module parens
-        let l:moduledef .= "\x01"
-        let l:moduledef .= ");\x01"
-
-        " Close module
-        let l:moduledef .= "\x01endmodule\x01"
-
-        " append moduledef string at cursor position
-        call append(line('.'), split(l:moduledef,"\x01") )
-        let lnum = line('.')
-    else
-        echo '    Unknown entity ' . name . '!'
-    endif
-endfunction
-
-
-"Insert entity defined by a:name as instance
-function! vlsi#v_sv#PasteAsInstance(name, signal_suffix='')
-    " Find module name or ask for it
-    if !exists('g:modules')
-        let g:modules = {}
-    endif
-    let name = a:name
-    if name == ''
-        let name = input('Module to paste as instance? ', '', 'customlist,vlsi#ListModules')
-    endif
-
-    " get current line
-    let lnum = line('.')
-
-    " write module definition into instancedef string
-    let l:instancedef = ''
-    if has_key(g:modules, name)
-        " start the module, NOTE: we use \x01 char for newlines marker
-        let l:instancedef .= name
-
-        " Handle parameters instanciation
-        if !empty(g:modules[name].generics)
-            "start #( ) parameter instanciation
-            let l:instancedef .= " #(\x01"
-            "build a list of instance parameters
-            let l:instanceparameters = []
-            for item in g:modules[name].generics
-                " format parameter as '.PARAM (VALUE)'
-                call add(l:instanceparameters, "    ." .. item.name .." (" .. item.value ..")")
-            endfor
-            " join the list with ,\x01
-            let l:instancedef .= join(l:instanceparameters,",\x01")
-            " terminate the parameter #()
-            let l:instancedef .= "\x01)"
-        endif
-
-        let l:instancedef .= " u_" .. name .. a:signal_suffix .. " (\x01"
-
-        "retrieve ports (using s:instanceIOFormatter formatter)
-        let l:ports = vlsi#portIterator(g:modules[name].ports,function('s:instanceIOFormatter'), a:signal_suffix )
-
-        "join the port definition list with ,\x01 marker
-        let l:instancedef .= join(l:ports,",\x01")
-
-        "skip a line and close module parens
-        let l:instancedef .= "\x01"
-        let l:instancedef .= ");\x01"
-
-        " append instancedef string at cursor position
-        call append(line('.'), split(l:instancedef,"\x01") )
-        let lnum = line('.')
-
-    else
-        echo '    Unknown entity ' . name . '!'
-    endif
-endfunction
-
-
-
-"Insert entity defined by a:name as instance
-function! vlsi#v_sv#PasteSignals(name, signal_suffix='')
-    " Find module name or ask for it
-    if !exists('g:modules')
-        let g:modules = {}
-    endif
-    let name = a:name
-    if name == ''
-        let name = input('Module to paste interface signals from? ', '', 'customlist,vlsi#ListModules')
-    endif
-
-    " get current line
-    let lnum = line('.')
-
-    " write module definition into instancedef string
-    let l:signalsdef = ''
-    if has_key(g:modules, name)
-        " start the module, NOTE: we use \x01 char for newlines marker
-        let l:signalsdef .= '// Interface signals for u_'  .. name .. a:signal_suffix .. "\x01"
-
-        "retrieve ports (using s:instanceIOFormatter formatter)
-        let l:ports = vlsi#portIterator(g:modules[name].ports,function('s:instanceSignalFormatter'),a:signal_suffix)
-
-        "join the port definition list with ,\x01 marker
-        let l:signalsdef .= join(l:ports,";\x01")
-
-        "skip a line and finish
-        let l:signalsdef .= ";\x01\x01"
-
-        " append instancedef string at cursor position
-        call append(line('.'), split(l:signalsdef,"\x01") )
-        let lnum = line('.')
-    else
-        echo '    Unknown entity ' . name . '!'
-    endif
 endfunction
