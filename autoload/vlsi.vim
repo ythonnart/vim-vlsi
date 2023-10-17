@@ -162,7 +162,7 @@ endfunction
 " @arg prefix (str) an optionnal prefix for all signals (used in instance and signal pasting)
 " @arg suffix (str) an optionnal suffix for all signals (used in instance and signal pasting)
 " @return a list of ports definition as strings
-function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:false, elem_max_size = {'dir':0, 'name':0, 'range':0, 'type':0})
+function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:false, elem_max_size = {})
     if !empty(a:portList)
         let l:ports = []
         for l:state in ['align-pass', 'generate-pass']
@@ -239,6 +239,7 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                     let l:portdef.type  = b:vlsi_config.default_vector_type
                 endif
 
+                "Actually format
                 if l:state == 'generate-pass'
                     " Call formatter to format l:portdef
                     " e.g. moduleIOFormatter(l:portdef)
