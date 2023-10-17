@@ -18,21 +18,29 @@ function! vlsi#Bindings()
     if !exists('b:VlsiPasteAsInstance')
         let b:VlsiPasteAsInstance = function('vlsi#PasteAsInstanceNotDefined')
     endif
+    if !exists('b:VlsiPasteSignals')
+        let b:VlsiPasteSignals = function('vlsi#PasteSignalsNotDefined')
+    endif
+
     " Command-line mode
-    command! -nargs=0 VlsiYank      :call b:VlsiYank()
-    command! -nargs=? VlsiList      :echo join(vlsi#ListModules('<args>','',''),' ')
-    command! -nargs=0 VlsiDefineNew :call vlsi#DefineNew()
+    command! -nargs=0 VlsiYank                                                    :call b:VlsiYank()
+    command! -nargs=? VlsiList                                                    :echo join(vlsi#ListModules('<args>','',''),' ')
+    command! -nargs=? VlsiListInterfaces                                          :echo join(vlsi#ListInterfaces('<args>','',''),' ')
+    command! -nargs=0 VlsiDefineNew                                               :call vlsi#DefineNew()
     command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition('<args>')
     command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsInterface  :call b:VlsiPasteAsInterface('<args>')
-    command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsInstance   :call b:VlsiPasteAsInstance('<args>')
+    command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteAsInstance   :call b:VlsiPasteAsInstance(<f-args>)
+    command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteSignals      :call b:VlsiPasteSignals(<f-args>)
 
     " <Plug> Mappings
     noremap <silent> <Plug>VlsiYank              :call b:VlsiYank     ()<CR>
     noremap <silent> <Plug>VlsiList              :echo join(vlsi#ListModules('<args>','',''),' ')<CR>
+    noremap <silent> <Plug>VlsiListInterface     :echo join(vlsi#ListInterfaces('<args>','',''),' ')<CR>
     noremap <silent> <Plug>VlsiDefineNew         :call vlsi#DefineNew ()<CR>
     noremap <silent> <Plug>VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition   ('')<CR>
     noremap <silent> <Plug>VlsiPasteAsInterface  :call b:VlsiPasteAsInterface('')<CR>
     noremap <silent> <Plug>VlsiPasteAsInstance   :call b:VlsiPasteAsInstance ('')<CR>
+    noremap <silent> <Plug>VlsiPasteSignals      :call b:VlsiPasteSignals    ('')<CR>
 
     " Default mappings
     if !hasmapto('<Plug>VlsiDefineNew') &&  maparg('<M-S-F6>','n') ==# ''
@@ -59,6 +67,15 @@ function! vlsi#ListModules(ArgLead,CmdLine,CursorPos)
     endif
     let listmodules = ''
     return filter(sort(keys(g:modules)), 'v:val =~ "^".a:ArgLead')
+endfunction
+
+"Returns list of all systemverilog interfaces
+function! vlsi#ListInterfaces(ArgLead,CmdLine,CursorPos)
+    if !exists('g:interfaces')
+        let g:modules = {}
+    endif
+    let listinterfaces = ''
+    return filter(sort(keys(g:interfaces)), 'v:val =~ "^".a:ArgLead')
 endfunction
 
 "Capture Vlsi from user input
@@ -110,6 +127,9 @@ function! vlsi#PasteAsInterfaceNotDefined(...)
 endfunction
 function! vlsi#PasteAsInstanceNotDefined(...)
     echoerr 'VlsiPasteAsInstance command not defined for this filetype!'
+endfunction
+function! vlsi#PasteSignalsNotDefined(...)
+    echoerr 'VlsiPasteSignals command not defined for this filetype!'
 endfunction
 
 
