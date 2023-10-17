@@ -7,6 +7,14 @@ function ChangeCase(str)
     endif 
 endfunction
 
+" format a range from a port definition
+function! vlsi#vhdl#formatRange(port) dict
+    if a:port.range_start == ''
+        return ''
+    endif
+    return '(' .. a:port.range_start .. ChangeCase(' downto ') . a:port.range_end .. ')'
+endfunction
+
 "Parse entity around cursor
 function! vlsi#vhdl#Yank() abort
     let idregex  = '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
