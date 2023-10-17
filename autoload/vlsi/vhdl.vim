@@ -12,9 +12,98 @@ function! vlsi#vhdl#formatRange(port) dict
     if a:port.range_start == ''
         return ''
     endif
-    return '(' .. a:port.range_start .. ChangeCase(' downto ') . a:port.range_end .. ')'
+    if a:port.range_start > a:port.range_end
+        let to_downto = ChangeCase('downto')
+    else
+        let to_downto = ChangeCase('to')
+    endif
+    return '(' .. a:port.range_start .. ' ' .. to_downto .. ' ' .. a:port.range_end .. ')'
 endfunction
 
+
+" define the formatting function for instance signals
+function! s:instanceSignalFormatter(port)
+    " logic [31:0] signame
+    " signal signame: sigtype(range)
+    let l:format = printf("    "..ChangeCase('signal').." %%-%ds : %%-%ds",
+                \ a:port.max_sizes.name + len(a:port.prefix) + len(a:port.suffix),
+                \ a:port.max_sizes.type + a:port.max_sizes.range)
+    return printf(l:format, 
+                \ a:port.prefix .. a:port.name .. a:port.suffix,
+                \ a:port.type .. a:port.range)
+endfunction
+
+" define the formatting function for module IOs
+function! s:entityIOFormatter(port)
+    let l:format = printf("    %%-%ds : %%-%ds %%s%%s",
+                \ a:port.max_sizes.name + len(a:port.prefix) + len(a:port.suffix),
+                \ a:port.max_sizes.dir)
+
+    return printf(l:format, 
+                \ a:port.prefix .. a:port.name .. a:port.suffix,
+                \ a:port.dir,
+                \ a:port.type,
+                \ a:port.range)
+endfunction
+
+" define the formatting function for instance IOs
+function! s:instanceIOFormatter(port)
+    let l:format = printf("          %%-%ds => %%-%ds",
+                \ a:port.max_sizes.name,
+                \ a:port.max_sizes.name + len(a:port.suffix) +len(a:port.prefix))
+    return printf(l:format, a:port.name, a:port.prefix .. a:port.name .. a:port.suffix)
+endfunction
+
+let vlsi#vhdl#formatPatterns = #{
+   \     definition : #{
+   \         start_module              : "entity {module_name} is\x01",
+   \             start_generics        : "  generic (\x01",
+   \                generics_item_func : "    {name} : {type} := {value}",
+   \                generics_sep       : ";\x01",
+   \             end_generics          : "\x01  );\x01",
+   \             start_ports           : "  port (\x01",
+   \                port_list_func     : function('s:entityIOFormatter'),
+   \                port_list_sep      : ";\x01",
+   \             end_ports             : "\x01  );\x01",
+   \         end_module                : "end entity {module_name};\x01",
+   \     },
+   \     component : #{
+   \         start_module              : "    component {module_name} is\x01",
+   \             start_generics        : "        generic (\x01",
+   \                generics_item_func : "          {name} : {type} := {value}",
+   \                generics_sep       : ";\x01",
+   \             end_generics          : "\x01        );\x01",
+   \             start_ports           : "        port (\x01    ",
+   \                port_list_func     : function('s:entityIOFormatter'),
+   \                port_list_sep      : ";\x01    ",
+   \             end_ports             : "\x01        );\x01",
+   \         end_module                : "    end component {module_name};\x01",
+   \     },
+   \     instance : #{
+   \         start_module              : "    u_{prefix}{module_name}{suffix} : {module_name}\x01",
+   \             start_generics        : "        generic map (\x01",
+   \                generics_item_func : "          {name} => {value}",
+   \                generics_sep       : ",\x01",
+   \             end_generics          : "\x01        )\x01",
+   \             start_ports           : "        port map (\x01",
+   \                port_list_func     : function('s:instanceIOFormatter'),
+   \                port_list_sep      : ",\x01",
+   \             end_ports             : "\x01        );\x01",
+   \         end_module                : "    -- end instance u_{prefix}{module_name}{suffix}\x01",
+   \     },
+   \     signals  : #{
+   \         start_module              : '',
+   \             start_generics        : '',
+   \                generics_item_func : '',
+   \                generics_sep       : '',
+   \             end_generics          : '',
+   \             start_ports           : "-- interface signals for {prefix}{module_name}{suffix}\x01",
+   \                port_list_func     : function('s:instanceSignalFormatter'),
+   \                port_list_sep      : ";\x01",
+   \             end_ports             : ";\x01",
+   \         end_module                : "-- end of signals for {prefix}{module_name}{suffix}\x01\x01",
+   \     },
+   \ }
 "Parse entity around cursor
 function! vlsi#vhdl#Yank() abort
     let idregex  = '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
@@ -79,176 +168,4 @@ function! vlsi#vhdl#Yank() abort
         endif
     endfor
     echo '    Capture for entity ' . modname . 'successful!'
-endfunction
-
-"Insert entity defined a:name as 'ENTITY'
-function! vlsi#vhdl#PasteAsEntity(name)
-    if !exists('g:modules')
-        let g:modules = {}
-    endif
-    let name = a:name
-    if name == ''
-        let name = input('Entity to paste as entity? ', '', 'customlist,vlsi#ListModules')
-    endif
-    let lnum = line('.')
-    if has_key(g:modules, name)
-        call append(lnum, ChangeCase('entity ') . name . ChangeCase(' is')) 
-        let lnum = lnum + 1
-        if !empty(g:modules[name].generics)
-            call append(lnum, ChangeCase('  generic ('))
-            let lnum = lnum + 1
-            let arglist = []
-            let keynum = 0
-            for item in g:modules[name].generics
-                let arglist += [ '    ' . item.name . ' : ' . ChangeCase(item.type) . ' := ' . item.value . ' ;' ]
-                let keynum = keynum + 1
-            endfor
-            let arglist[-1] = arglist[-1][:-3]
-            call append(lnum, arglist)
-            let lnum = lnum + keynum
-            call append(lnum, '  );')
-            let lnum = lnum + 1
-        endif
-        if !empty(g:modules[name].ports)
-            call append(lnum, ChangeCase('  port ('))
-            let lnum = lnum + 1
-            let arglist = []
-            let keynum = 0
-            for item in g:modules[name].ports
-                if item.dir == 'i'
-                    let dir = ChangeCase('in ')
-                elseif item.dir == 'io'
-                    let dir = ChangeCase('inout')
-                else
-                    let dir = ChangeCase('out')
-                endif
-                let rangelist = matchlist(item.range, '\(.*\){{:}}\(.*\)')
-                if !empty(rangelist)
-                    let type = ChangeCase('std_logic_vector(') . rangelist[1] . ChangeCase(' downto ') . rangelist[2] . ')'
-                else
-                    let type = ChangeCase('std_logic')
-                endif
-                let arglist += [ '    ' . item.name . ' : ' . dir . ' ' . type . ' ;' ]
-                let keynum = keynum + 1
-            endfor
-            let arglist[-1] = arglist[-1][:-3]
-            call append(lnum, arglist)
-            let lnum = lnum + keynum
-            call append(lnum, '  );')
-            let lnum = lnum + 1
-        endif
-        call append(lnum, ChangeCase('end ') . name . ';')
-    else
-        echo '    Unknown entity ' . name . '!'
-    endif
-endfunction
-
-"Insert entity defined by a:name as 'COMPONENT'
-function! vlsi#vhdl#PasteAsComponent(name)
-    if !exists('g:modules')
-        let g:modules = {}
-    endif
-    let name = a:name
-    if name == ''
-        let name = input('Entity to paste as component? ', '', 'customlist,vlsi#ListModules')
-    endif
-    let lnum = line('.')
-    if has_key(g:modules, name)
-        call append(lnum, ChangeCase('  component ') . name) 
-        let lnum = lnum + 1
-        if !empty(g:modules[name].generics)
-            call append(lnum, ChangeCase('    generic ('))
-            let lnum = lnum + 1
-            let arglist = []
-            let keynum = 0
-            for item in g:modules[name].generics
-                let arglist += [ '      ' . item.name . ' : ' . ChangeCase(item.type) . ' := ' . item.value . ' ;' ]
-                let keynum = keynum + 1
-            endfor
-            let arglist[-1] = arglist[-1][:-3]
-            call append(lnum, arglist)
-            let lnum = lnum + keynum
-            call append(lnum, '  );')
-            let lnum = lnum + 1
-        endif
-        if !empty(g:modules[name].ports)
-            call append(lnum, ChangeCase('    port ('))
-            let lnum = lnum + 1
-            let arglist = []
-            let keynum = 0
-            for item in g:modules[name].ports
-                if item.dir == 'i'
-                    let dir = ChangeCase('in ')
-                elseif item.dir == 'io'
-                    let dir = ChangeCase('inout ')
-                else
-                    let dir = ChangeCase('out')
-                endif
-                let rangelist = matchlist(item.range, '\(.*\){{:}}\(.*\)')
-                if !empty(rangelist)
-                    let type = ChangeCase('std_logic_vector(') . rangelist[1] . ChangeCase(' downto ') . rangelist[2] . ')'
-                else
-                    let type = ChangeCase('std_logic')
-                endif
-                let arglist += [ '      ' . item.name . ' : ' . dir . ' ' . type . ' ;' ]
-                let keynum = keynum + 1
-            endfor
-            let arglist[-1] = arglist[-1][:-3]
-            call append(lnum, arglist)
-            let lnum = lnum + keynum
-            call append(lnum, '  );')
-            let lnum = lnum + 1
-        endif
-        call append(lnum, ChangeCase('  end component;'))
-    else
-        echo '    Unknown entity ' . name . '!'
-    endif
-endfunction
-
-"Insert entity defined by a:name as instance
-function! vlsi#vhdl#PasteAsInstance(name)
-    if !exists('g:modules')
-        let g:modules = {}
-    endif
-    let name = a:name
-    if name == ''
-        let name = input('Entity to paste as instance? ', '', 'customlist,vlsi#ListModules')
-    endif
-    let lnum = line('.')
-    if has_key(g:modules, name)
-        call append(lnum, '  I_' . name . ' : ' . name) 
-        let lnum = lnum + 1
-        if !empty(g:modules[name].generics)
-            call append(lnum, ChangeCase('    generic map ('))
-            let lnum = lnum + 1
-            let arglist = []
-            let keynum = 0
-            for item in g:modules[name].generics
-                let arglist += [ '      ' . item.name . ' => ' . item.value . ' ,' ]
-                let keynum = keynum + 1
-            endfor
-            let arglist[-1] = arglist[-1][:-3]
-            call append(lnum, arglist)
-            let lnum = lnum + keynum
-            call append(lnum, '  )')
-            let lnum = lnum + 1
-        endif
-        if !empty(g:modules[name].ports)
-            call append(lnum, ChangeCase('    port map ('))
-            let lnum = lnum + 1
-            let arglist = []
-            let keynum = 0
-            for item in g:modules[name].ports
-                let arglist += [ '      ' . item.name . ' => ' . item.name . ' ,' ]
-                let keynum = keynum + 1
-            endfor
-            let arglist[-1] = arglist[-1][:-3]
-            call append(lnum, arglist)
-            let lnum = lnum + keynum
-            call append(lnum, '  );')
-            let lnum = lnum + 1
-        endif
-    else
-        echo '    Unknown entity ' . name . '!'
-    endif
 endfunction

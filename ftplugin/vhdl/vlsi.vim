@@ -1,8 +1,8 @@
 " Load specific functions for VHDL entity yank/paste
-let b:VlsiYank              = function('vlsi#vhdl#Yank')
-let b:VlsiPasteAsDefinition = function('vlsi#vhdl#PasteAsEntity')
-let b:VlsiPasteAsInterface  = function('vlsi#vhdl#PasteAsComponent')
-let b:VlsiPasteAsInstance   = function('vlsi#vhdl#PasteAsInstance')
+let b:VlsiPasteAsDefinition = function('vlsi#GenericPaste',[vlsi#vhdl#formatPatterns.definition])
+let b:VlsiPasteAsInterface  = function('vlsi#GenericPaste',[vlsi#vhdl#formatPatterns.component])
+let b:VlsiPasteAsInstance   = function('vlsi#GenericPaste',[vlsi#vhdl#formatPatterns.instance])
+let b:VlsiPasteSignals      = function('vlsi#GenericPaste',[vlsi#vhdl#formatPatterns.signals])
 let b:vlsi_config           = #{
             \ language: "vhdl",
             \ comment : "--",
