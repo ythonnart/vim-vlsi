@@ -247,13 +247,18 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                     " Add returned string to the list of ports
                     call add(l:ports, l:port_full_def)
                 elseif l:state == 'align-pass'
-                    " only measure sizes
-                    let a:elem_max_size.dir   = (a:elem_max_size.dir   < len(l:portdef.dir ) ? len(l:portdef.dir ) : a:elem_max_size.dir)
-                    let a:elem_max_size.type  = (a:elem_max_size.type  < len(l:portdef.type) ? len(l:portdef.type) : a:elem_max_size.type)
-                    let a:elem_max_size.name  = (a:elem_max_size.name  < len(l:portdef.name) ? len(l:portdef.name) : a:elem_max_size.name)
-                    let l:range_size = len(b:vlsi_config.formatRange(l:portdef))
-                    let a:elem_max_size.range = (a:elem_max_size.range < l:range_size   ? l:range_size   : a:elem_max_size.range)
-                endif
+                    " update each field max size for alignment
+                    for key in keys(l:portdef)
+                        if !has_key(a:elem_max_size,key)
+                            let a:elem_max_size[key] = 0
+                        endif
+                        let val = l:portdef[key]
+                        if type(val) == v:t_number || type(val) == v:t_string || type(val) == v:t_float
+                            let a:elem_max_size[key] = (a:elem_max_size[key] < len(val) ?
+                                                        \ len(val) : a:elem_max_size[key])
+                        endif
+                    endfor "align-pass
+                endif "field size computation / port generation
             endfor "Foreach port
         endfor " align-pass / generate-pass
     endif
