@@ -33,7 +33,7 @@ function! vlsi#vhdl#Yank() abort
             return
         endif
     endif
-    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : 'vhdl' }
+    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language }
     let kind = -1
     for curline in getline(entbegin, entend)
         if match(curline,'\cgeneric') != -1

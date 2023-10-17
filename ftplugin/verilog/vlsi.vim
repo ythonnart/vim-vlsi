@@ -2,7 +2,11 @@
 let b:VlsiYank              = function('vlsi#v_sv#Yank')
 let b:VlsiPasteAsDefinition = function('vlsi#v_sv#PasteAsModule')
 let b:VlsiPasteAsInstance   = function('vlsi#v_sv#PasteAsInstance')
-let b:vlsi_config           = #{comment : "//", type:'wire',
+let b:vlsi_config           = #{
+            \ language: 'verilog',
+            \ comment : "//",
+            \ default_scalar_type:'wire',
+            \ default_vector_type:'wire',
             \ kind2dir : #{i:'input', o:'output', io:'inout'},
             \ formatRange:function("vlsi#v_sv#formatRange")}
  

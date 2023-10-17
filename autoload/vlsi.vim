@@ -173,7 +173,7 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                         \ 'range_start' :  '',
                         \ 'range_end'   :  '',
                         \ 'range'       :  '',
-                        \ 'type'        :  b:vlsi_config.type,
+                        \ 'type'        :  b:vlsi_config.default_scalar_type,
                         \ 'suffix'      :  a:suffix,
                         \ 'prefix'      :  a:prefix,
                         \ 'max_sizes'   :  a:elem_max_size,
@@ -189,7 +189,7 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                     let l:portdef.type = item.type
                     let l:portdef.dir  = ''
                     " expand interface ports if necessary or asked
-                    if a:expand || &filetype == 'verilog'
+                    if a:expand || b:vlsi_config.language != 'systemverilog'
                         "We should expand the interface
                         if exists('g:interfaces') && has_key(g:interfaces,interface_name)
                             if has_key(g:interfaces[interface_name].modports, interface_modport)
@@ -205,7 +205,7 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                                     continue
                                 else
                                     " align-pass
-                                    let l:portdef.type = b:vlsi_config.type
+                                    let l:portdef.type = b:vlsi_config.default_scalar_type
                                     let l:portdef.dir  = ''
                                 endif
                             else "interface modport doesn't exist
@@ -235,6 +235,8 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                     let l:portdef.range_end   = l:rangelist[2]
                     " Add formatted range
                     let l:portdef.range = b:vlsi_config.formatRange(l:portdef)
+                    " switch to vector type
+                    let l:portdef.type  = b:vlsi_config.default_vector_type
                 endif
 
                 if l:state == 'generate-pass'

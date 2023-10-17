@@ -241,7 +241,7 @@ function! vlsi#v_sv#Yank() abort
         endif
     endif
     " Add module skeleton
-    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : &filetype }
+    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language }
 
     " scope kind
     let kind = -1

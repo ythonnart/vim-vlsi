@@ -3,7 +3,13 @@ let b:VlsiYank              = function('vlsi#vhdl#Yank')
 let b:VlsiPasteAsDefinition = function('vlsi#vhdl#PasteAsEntity')
 let b:VlsiPasteAsInterface  = function('vlsi#vhdl#PasteAsComponent')
 let b:VlsiPasteAsInstance   = function('vlsi#vhdl#PasteAsInstance')
- 
+let b:vlsi_config           = #{
+            \ language: "vhdl",
+            \ comment : "--",
+            \ default_scalar_type:'std_logic',
+            \ default_vector_type:'std_logic_vector',
+            \ kind2dir : #{i:'in', o:'out', io:'inout'},
+            \ formatRange:function("vlsi#vhdl#formatRange")}
 " Create default bindings
 call vlsi#Bindings()
 
