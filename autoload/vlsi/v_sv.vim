@@ -247,11 +247,12 @@ function! vlsi#v_sv#Yank() abort
     let kind = -1
     for curline in getline(modbegin, modend)
         " skip comments
-        if curline =~ '^\s*\/\/'
+        let curline = substitute(curline,'\/\/.*$','','g')
+        if curline =~ '^\s*$'
             continue
         endif
-        "parameter a = value;
-        let linelist = matchlist(curline,'\c^\s*parameter\s*\(' . idregex . '\)\s*=\s*\([^;,]*\S\)\s*\(;\|,\)')
+        "parameter a = value[;,]
+        let linelist = matchlist(curline,'\c^\s*parameter\s*\(' . idregex . '\)\s*=\s*\([^;,].\{-}\)\s*\(;\|,\|$\)\s*$')
         if !empty(linelist)
             "TODO capture parameter type ?
             let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : 'natural', 'value' : linelist[2] } ]
