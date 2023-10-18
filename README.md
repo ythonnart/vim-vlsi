@@ -1,5 +1,10 @@
-vim-vlsi : useful scripts for VLSI design
-=========================================
+vim-vlsim : useful scripts for VLSI design
+==========================================
+
+This fork of [ythonnart/vim-vlsi](https://github.com/ythonnart/vim-vlsi)
+contains improvements (such as VlsiPasteSignals) and a deep refactoring.
+Rewriting `PasteAs*` for new languages is now much more efficient as it 
+only consists of filling a structure of patterns.
 
 ## VLSI Module/Entity Yank & Paste
 The VLSI plugin defines module yank & paste, keeping a list of registered
@@ -15,6 +20,7 @@ Paste is possible from a filetype to another.
 
 Current supported filetypes:
 * Verilog
+* SystemVerilog
 * VHDL
 
 
@@ -37,6 +43,9 @@ Current supported filetypes:
 `:VlsiPasteAsInstance [{modulename}]  ` Paste module as bound instance.
                                        default mapping: `<F6>`
 
+`:VlsiPasteSignals [{modulename}]     ` Paste module IOs as signals
+                                       default mapping: `<F6>`
+
 ## VLSI Tagbar plugin integration
 The VLSI plugin adds support for ctags-compatible tag file generation and
 corresponding configuration for the Tagbar plugin. for more information, see:
@@ -47,10 +56,11 @@ Tagbar: a class outline viewer for Vim
 Scoped tag generation is available for VHDL and Verilog.
 
 ## Authors:
+* Laurent Alacoque
 * Yvain Thonnart
 
 ## Copyright & Licencse:
-(c) 2009 - 2017 by the authors
+(c) 2009 - 2023 by the authors
 
 The VIM LICENSE applies to vim-vlsi
 (see vim copyright) except use vim-vlsi instead of "Vim".
