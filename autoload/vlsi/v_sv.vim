@@ -297,7 +297,7 @@ function! vlsi#v_sv#Yank() abort
         endif
 
         "port direction as in "input [31:0] bus"
-        let linelist = matchlist(curline,'\c\<\(input\|output\|inout\)\s\+\(.*\)$')
+        let linelist = matchlist(curline,'\c^\s*\(input\|output\|inout\)\s\+\(.*\)$')
         if !empty(linelist)
             " adjust 'dir' variable and set kind scope to 1
             let kind = 1
