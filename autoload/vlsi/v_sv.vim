@@ -290,7 +290,7 @@ function! vlsi#v_sv#Yank() abort
             continue
         endif
         "parameter a = value[;,]
-        let linelist = matchlist(curline,'\c^\s*parameter\s*\(' . idregex . '\)\s*=\s*\([^;,].\{-}\)\s*\(;\|,\|$\)\s*$')
+        let linelist = matchlist(curline,'\c\<parameter\s*\(' . idregex . '\)\s*=\s*\([^;,].\{-}\)\s*\(;\|,\|$\|)\)\+\s*$')
         if !empty(linelist)
             "TODO capture parameter type ?
             let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : 'natural', 'value' : linelist[2] } ]
