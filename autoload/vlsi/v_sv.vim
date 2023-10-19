@@ -247,7 +247,7 @@ function! vlsi#v_sv#Yank() abort
     let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     " datatype: logic, wire, AHB_BUS.master
-    let datatype = 'logic\|wire\|\w\+\.\w\+'
+    let datatype = '\w\+\|\w\+\.\w\+'
     if !exists('g:modules')
         let g:modules = {}
     endif
@@ -297,7 +297,7 @@ function! vlsi#v_sv#Yank() abort
         endif
 
         "port direction as in "input [31:0] bus"
-        let linelist = matchlist(curline,'\c^\s*\(input\|output\|inout\)\s\+\(.*\)$')
+        let linelist = matchlist(curline,'\c\<\(input\|output\|inout\)\s\+\(.*\)$')
         if !empty(linelist)
             " adjust 'dir' variable and set kind scope to 1
             let kind = 1

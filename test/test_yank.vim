@@ -35,10 +35,8 @@ function! s:assert_module_equals(wanted,actual) dict
     call self.assert_equal(a:wanted.lang, a:actual.lang, "'lang' mismatch")
 
     " compare generics sizes
-    if self.assert_equal(len(a:wanted.generics), len(a:actual.generics), "generics size mismatch")
-        " size mismatch
-        call self.puts('wanted: ' . string(a:wanted.generics) . ' actual:' . string(a:wanted.generics))
-    else
+    call self.assert_equal(len(a:wanted.generics), len(a:actual.generics), "generics size mismatch")
+    if len(a:wanted.generics) == len(a:actual.generics)
         " size matches
         for i in range(len(a:actual.generics))
             call self.assert_equal(a:wanted.generics[i], a:actual.generics[i],"mismatch for generic " .. i)
@@ -46,12 +44,11 @@ function! s:assert_module_equals(wanted,actual) dict
     endif
 
     " compare ports sizes
-    if self.assert_equal(len(a:wanted.ports), len(a:actual.ports), "ports size mismatch")
-        " size mismatch
-    else
+    call self.assert_equal(len(a:wanted.ports), len(a:actual.ports), "ports size mismatch")
+    if len(a:wanted.ports) == len(a:actual.ports)
         " size matches
         for i in range(len(a:actual.ports))
-            call self.assert_equal(a:wanted.ports[i], a:actual.ports[i],"mismatch for ports " .. i)
+            call self.assert_equal(a:wanted.ports[i], a:actual.ports[i],"mismatch for generic " .. i)
         endfor
     endif
 
@@ -103,6 +100,9 @@ endfunction
 """ test functions
 
 
+"--------------------------------------------------------------------------------
+" Generics Tests
+"--------------------------------------------------------------------------------
 function! s:tc.test_yank_minimal()
     let  l:label = 'minimal'
     let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[]}
@@ -138,6 +138,80 @@ function! s:tc.test_yank_generics_multi()
     call self.assert_yank_equals(l:label, s:wanted)
 endfunction
 
+"--------------------------------------------------------------------------------
+" Ports Tests
+"--------------------------------------------------------------------------------
 
+function! s:tc.test_yank_port1()
+    let  l:label = 'port1'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+        \ #{name:'port1', type:'logic', range:0, dir:'i'}
+        \ ]}
+    call self.assert_yank_equals(l:label, s:wanted)
+endfunction
+
+function! s:tc.test_yank_port1a()
+    let  l:label = 'port1a'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+        \ #{name:'port1', type:'logic', range:0, dir:'i'}
+        \ ]}
+    call self.assert_yank_equals(l:label, s:wanted)
+endfunction
+
+function! s:tc.test_yank_port1b()
+    let  l:label = 'port1b'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+        \ #{name:'port1', type:'logic', range:0, dir:'i'}
+        \ ]}
+    call self.assert_yank_equals(l:label, s:wanted)
+endfunction
+
+function! s:tc.test_yank_ports_multi()
+    let  l:label = 'ports_multi'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+                \ #{name:'port1', type:'logic', range:0, dir:'i'},
+                \ #{name:'port2', type:'logic', range:0, dir:'o'},
+                \ #{name:'port3', type:'logic', range:0, dir:'io'},
+                \ ]}
+    call self.assert_yank_equals(l:label, s:wanted)
+endfunction
+
+"--------------------------------------------------------------------------------
+" Ports with special type
+"--------------------------------------------------------------------------------
+
+function! s:tc.test_yank_porttype1()
+    let  l:label = 'porttype1'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+        \ #{name:'port1', type:'mytype', range:0, dir:'i'}
+        \ ]}
+    call self.assert_yank_equals(l:label, s:wanted)
+endfunction
+
+function! s:tc.test_yank_porttype1a()
+    let  l:label = 'porttype1a'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+        \ #{name:'port1', type:'mytype', range:0, dir:'i'}
+        \ ]}
+    call self.assert_yank_equals(l:label, s:wanted)
+endfunction
+
+function! s:tc.test_yank_porttype1b()
+    let  l:label = 'porttype1b'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+        \ #{name:'port1', type:'mytype', range:0, dir:'i'}
+        \ ]}
+    call self.assert_yank_equals(l:label, s:wanted)
+endfunction
+
+function! s:tc.test_yank_porttypes_multi()
+    let  l:label = 'porttypes_multi'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+                \ #{name:'port1', type:'mytype', range:0, dir:'i'},
+                \ #{name:'port2', type:'mytype', range:0, dir:'o'},
+                \ #{name:'port3', type:'mytype', range:0, dir:'io'},
+                \ ]}
+    call self.assert_yank_equals(l:label, s:wanted)
+endfunction
 
 " vim: :fdm=marker
