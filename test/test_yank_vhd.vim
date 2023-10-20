@@ -61,7 +61,7 @@ endfunction
 " Compare yanked module to provided module_data
 function! s:goto_yank_compare_module(label, module_data) dict
     call self.data.goto(a:label)
-    call vlsi#vhdl#Yank()
+    VlsiYank
     call self.assert(has_key(g:modules,a:label), "capture failed for "..a:label)
     call self.assert_module_equals(a:module_data, g:modules[a:label])
 endfunction
