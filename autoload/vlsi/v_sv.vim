@@ -247,7 +247,7 @@ function! vlsi#v_sv#Yank() abort
     let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     " datatype: logic, wire, AHB_BUS.master
-    let datatype = 'logic\|wire\|\w\+\.\w\+'
+    let datatype = '\w\+\|\w\+\.\w\+'
     if !exists('g:modules')
         let g:modules = {}
     endif
@@ -271,13 +271,6 @@ function! vlsi#v_sv#Yank() abort
     endif
     let modname = linelist[2]
     "Found module between modbegin and modend with name modname
-    " Check for overwrite
-    if has_key(g:modules,modname)
-        if input('Module ' . modname . ' exists! Overwrite (y/n)? ') != 'y'
-            echo '    Module capture abandoned!'
-            return
-        endif
-    endif
     " Add module skeleton
     let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language }
 
@@ -290,7 +283,7 @@ function! vlsi#v_sv#Yank() abort
             continue
         endif
         "parameter a = value[;,]
-        let linelist = matchlist(curline,'\c^\s*parameter\s*\(' . idregex . '\)\s*=\s*\([^;,].\{-}\)\s*\(;\|,\|$\)\s*$')
+        let linelist = matchlist(curline,'\c\<parameter\s*\(' . idregex . '\)\s*=\s*\([^;,].\{-}\)\s*\(;\|,\|$\|)\)\+\s*$')
         if !empty(linelist)
             "TODO capture parameter type ?
             let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : 'natural', 'value' : linelist[2] } ]
