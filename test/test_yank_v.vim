@@ -185,7 +185,6 @@ endfunction
 " {{{ 1
 
 function! s:tc.test_v_yank_ports_and_generics1()
-    return "Fails"
     let  l:label = 'pg1'
     let  s:wanted = #{ lang:'verilog', generics:[
         \ #{name:'param1', type:'natural', value:'4'}
@@ -196,7 +195,6 @@ function! s:tc.test_v_yank_ports_and_generics1()
 endfunction
 
 function! s:tc.test_v_yank_ports_and_generics1a()
-    return "Fails"
     let  l:label = 'pg1a'
     let  s:wanted = #{ lang:'verilog', generics:[#{name:'param1', type:'natural', value:'4'}], ports:[
         \ #{name:'port1', type:'wire', range:0, dir:'i'}
@@ -251,7 +249,6 @@ endfunction
 " {{{ 
 "
 function! s:tc.test_v_yank_port_default_type()
-    return "Fails"
     let  l:label = 'pdt'
     let  s:wanted = #{ lang:'verilog', generics:[
         \ ], ports:[
@@ -263,7 +260,6 @@ function! s:tc.test_v_yank_port_default_type()
 endfunction
 
 function! s:tc.test_v_yank_port_default_type1()
-    return "Fails"
     let  l:label = 'pdt1'
     let  s:wanted = #{ lang:'verilog', generics:[
         \ ], ports:[
@@ -276,7 +272,6 @@ function! s:tc.test_v_yank_port_default_type1()
 endfunction
 
 function! s:tc.test_v_yank_port_default_type2()
-    return "Fails"
     let  l:label = 'pdt2'
     let  s:wanted = #{ lang:'verilog', generics:[
         \ ], ports:[
