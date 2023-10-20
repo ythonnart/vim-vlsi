@@ -127,38 +127,63 @@ function! vlsi#vhdl#Yank() abort
     let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language }
     let kind = -1
     for curline in getline(entbegin, entend)
-        if match(curline,'\cgeneric') != -1
+        "get rid of comments
+        let curline = substitute(curline,'\s*--.*$','','g')
+        if curline =~ '^\s*$'
+            continue
+        endif
+        let linelist = matchlist(curline,'\c\(\<generic\>\)\s*\(.*\)')
+        if !empty(linelist)
             let kind = 0
+            let curline = linelist[2]
         endif
-        if match(curline,'\cport') != -1
+        let linelist = matchlist(curline,'\c\(\<port\>\)\s*\(.*\)')
+        if !empty(linelist)
             let kind = 1
+            let curline = linelist[2]
         endif
-        let linelist = matchlist(curline,'\c^\s*\(' . idregex . '\)\s*:\s*\(.\{-}\S\)\s*\(\($\|;\|--\)\|:=\s*\(.\{-}\S\)\s*\($\|;\|--\)\)')
+
+        "let linelist =matchlist(curline,'\c^\s*(*\s*\(' . idregex . '\)\s*:\s*\(.\{-}\S\)\s*\(\($\|;\|--\)\|:=\s*\(.\{-}\S\)\s*\($\|;\|--.*\|)\)\)\(.*\)$')
+        "(param1 : natural := 4);
+        "param1 : natural := 4;
+        let matchpattern = '\c^\s*'
+        "optionnal (
+        let matchpattern .= '(*\s*'
+        "param name until ':'
+        let matchpattern .= '\(\w\+\)\s*:\s*' " [1] paramname
+        " type until ':='
+        "let matchpattern .= '\(\S\{-}\S\)\s*:=\s*' " [2] type
+        let matchpattern .= '\([^: \t]\+\)\s*:=\s*' " [2] type
+        " value until ';', eol, '-- blah' or ')'
+        let matchpattern .= '\(\S\{-}\S\)\s*\(;\|)\|--.*\|$\)' " [3] value [4] termination
+        " ^^ DOES not work for param : natural :=4); port(
+        " rest of line
+        let matchpattern .= '\(.*\)' " [5] rest of line
+
+        let linelist = matchlist(curline,matchpattern)
         if kind == 0 && !empty(linelist)
             let linelist[2] = tolower(linelist[2])
-            let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : linelist[2], 'value' : linelist[5] } ]
+            let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : linelist[2], 'value' : linelist[3] } ]
+            let curline=linelist[5]
         endif
-        let linelist = matchlist(curline,'\c^\s*\(' . idregex . '\)\s*:\s*\(in\|out\|inout\)\s*\(.\{-}\S\)\s*\($\|;\|--\)')
+        let linelist = matchlist(curline,'\c^\s*(*\s*\(' . idregex . '\)\s*:\s*\(\<in\>\|\<out\>\|\<inout\>\)\s*\(.\{-}\S\)\s*\($\|;\|--\)')
         if kind == 1 && !empty(linelist)
-            if linelist[2] =~ '\c^i'
-                if linelist[2] =~ '\c^inout'
-                    let dir = 'io'
-                else
-                    let dir = 'i'
-                endif
-            elseif linelist[2] =~ '\c^o'
-                let dir = 'o'
+            if linelist[2] =~ '\c^in\>'
+                let dir = 'i'
+            elseif linelist[2] =~ '\c^inout'
+                let dir ='io'
             else
-                echo '    Entity capture abandoned!'
-                return
+                let dir ='o'
             endif
             let rangelist = matchlist(linelist[3],'\cvector\s*(\s*\(' . mixregex . '\)\s*downto\s*\(' . mixregex . '\)\s*)')
             if !empty(rangelist)
                 let range = substitute(rangelist[1],'\s*$','','') . "{{:}}" . substitute(rangelist[2],'\s*$','','')
+                let type  = 'std_logic_vector'
             else
                 let range = 0
+                let type  = 'std_logic'
             endif
-            let g:modules[modname].ports += [ { 'name' : linelist[1], 'dir' : dir, 'range' : range } ]
+            let g:modules[modname].ports += [ { 'name' : linelist[1], 'dir' : dir, 'range' : range, 'type':type } ]
         endif
     endfor
     echo '    Capture for entity ' . modname . 'successful!'
