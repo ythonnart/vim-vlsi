@@ -271,13 +271,6 @@ function! vlsi#v_sv#Yank() abort
     endif
     let modname = linelist[2]
     "Found module between modbegin and modend with name modname
-    " Check for overwrite
-    if has_key(g:modules,modname)
-        if input('Module ' . modname . ' exists! Overwrite (y/n)? ') != 'y'
-            echo '    Module capture abandoned!'
-            return
-        endif
-    endif
     " Add module skeleton
     let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language }
 

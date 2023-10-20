@@ -124,12 +124,6 @@ function! vlsi#vhdl#Yank() abort
         return
     endif
     let modname = linelist[2]
-    if has_key(g:modules,modname)
-        if input('Entity ' . modname . ' exists! Overwrite (y/n)? ') != 'y'
-            echo '    Entity capture abandoned!'
-            return
-        endif
-    endif
     let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language }
     let kind = -1
     for curline in getline(entbegin, entend)
