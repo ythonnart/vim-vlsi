@@ -26,13 +26,20 @@ module generic1b #(
 endmodule
 // end generic1b
 
+// begin generic_special_val
+module generic_special_val #(
+    parameter param1 = {1,0,3}
+)();
+endmodule
+// end generic_special_val
+
 // begin generics_multi
 module generics_multi #(
     parameter truc = 4,
     //unused comment
-    parameter machin = {1, 0, 3},
+    parameter machin = 33,
     parameter chose = 10 , //hello
-    parameter thing={1,0} // unused comment
+    parameter thing= 6 // unused comment
 )(
 );
 endmodule
@@ -127,9 +134,9 @@ endmodule
 module pgs_multi #(
     parameter truc = 4,
     //unused comment
-    parameter machin = {1, 0, 3},
+    parameter machin = 33,
     parameter chose = 10 , //hello
-    parameter thing={1,0} // unused comment
+    parameter thing=6 // unused comment
 )(
     input logic port1,
     output logic port2,
@@ -173,6 +180,7 @@ module pdt1 (
 );
 endmodule
 // end pdt1
+//
 // begin pdt2
 module pdt2 (
     input port1, port2, output port3, inout port4
