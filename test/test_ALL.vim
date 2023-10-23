@@ -7,3 +7,5 @@ let s:here = expand('<sfile>:p:h')
 execute 'source' s:here . '/test_yank_sv.vim'
 execute 'source' s:here . '/test_yank_v.vim'
 execute 'source' s:here . '/test_yank_vhd.vim'
+execute 'source' s:here . '/test_paste_v_sv.vim'
+
