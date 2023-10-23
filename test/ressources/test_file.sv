@@ -52,6 +52,13 @@ module generics_in_body;
 endmodule
 // end generics_in_body
 
+// begin generics_local_param
+module generics_local_param;
+    localparam param1 = 1;
+    localparam param2 = 2;
+endmodule
+// end generics_local_param
+
 ////////////////////////////////////////////////////////////////////////////////
 // Ports test (fully qualified)
 ////////////////////////////////////////////////////////////////////////////////

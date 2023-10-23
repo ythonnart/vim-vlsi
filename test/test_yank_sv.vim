@@ -223,6 +223,14 @@ function! s:tc.test_sv_yank_generics_in_body()
     call self.assert_yank_module_equals(l:label, s:wanted)
 endfunction
 
+function! s:tc.test_sv_yank_generics_local_param()
+    let  l:label = 'generics_local_param'
+    let  s:wanted = #{ lang:'systemverilog', generics:[
+                \ #{name:'param1', type:'natural', value:'1'},
+                \ #{name:'param2', type:'natural', value:'2'},
+                \ ], ports:[]}
+    call self.assert_yank_module_equals(l:label, s:wanted)
+endfunction
 " }}}
 "--------------------------------------------------------------------------------
 " Ports Tests
