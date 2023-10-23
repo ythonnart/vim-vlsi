@@ -182,14 +182,14 @@ endfunction
 " @arg prefix (str) an optionnal prefix for all signals (used in instance and signal pasting)
 " @arg suffix (str) an optionnal suffix for all signals (used in instance and signal pasting)
 " @return a list of ports definition as strings
-function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:false, elem_max_size = {})
+function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:false, elem_max_size = {}, if_port_prefix ='')
     if !empty(a:portList)
         let l:ports = []
         for l:state in ['align-pass', 'generate-pass']
             for l:item in a:portList
                 let l:portdef = {
                         \ 'dir'         :  b:vlsi_config.kind2dir[l:item.dir],
-                        \ 'name'        :  l:item.name,
+                        \ 'name'        :  a:if_port_prefix .. l:item.name,
                         \ 'range_start' :  '',
                         \ 'range_end'   :  '',
                         \ 'range'       :  '',
@@ -218,10 +218,11 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                                     let l:if_ports = vlsi#portIterator(
                                                 \ g:interfaces[interface_name].modports[interface_modport],
                                                 \ a:formatter,
-                                                \ a:suffix, a:prefix .. item.name .. "_", a:expand, a:elem_max_size)
+                                                \ a:suffix, a:prefix , a:expand, a:elem_max_size, item.name .. '_')
                                     let l:if_ports[0] =  "    ".. b:vlsi_config.comment .." Expansion of interface "..item.type .. " start\x01" .. l:if_ports[0]
-                                    let l:if_ports[-1] = l:if_ports[-1] .. ",\x01    ".. b:vlsi_config.comment .." Expansion of interface "..item.type .. " end"
+                                    "let l:if_ports = l:if_ports + ["    ".. b:vlsi_config.comment .." Expansion of interface "..item.type .. " end"]
                                     let l:ports = extend(l:ports, l:if_ports)
+                                    echom "l:if_ports: " .. string(l:if_ports)
                                     continue
                                 else
                                     " align-pass
@@ -355,6 +356,11 @@ function! vlsi#GenericPaste(patterns, moduleName, suffix='', prefix='', expand=v
         let result .= join(generics_lines, a:patterns.generics_sep)
         " end generics
         let result .= vlsi#basicFormat(mod_val,a:patterns.end_generics)
+    endif
+
+    "between generics and ports
+    if has_key(a:patterns,'gen2port')
+        let result .= vlsi#basicFormat(mod_val,a:patterns.gen2port)
     endif
 
     " ports
