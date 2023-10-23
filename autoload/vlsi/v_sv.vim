@@ -45,8 +45,8 @@ let vlsi#v_sv#formatPatterns = #{
    \             start_ports           : " (\x01",
    \                port_list_func     : function('s:moduleIOFormatter'),
    \                port_list_sep      : ",\x01",
-   \             end_ports             : "\x01);\x01",
-   \         end_module                : "\x01endmodule //{module_name}\x01",
+   \             end_ports             : "\x01)",
+   \         end_module                : ";\x01\x01endmodule //{module_name}\x01",
    \     },
    \     instance : #{
    \         start_module              : "{module_name}",
@@ -54,7 +54,8 @@ let vlsi#v_sv#formatPatterns = #{
    \                generics_item_func : "    .{name} ({value})",
    \                generics_sep       : ",\x01",
    \             end_generics          : "\x01  )",
-   \             start_ports           : " u_{prefix}{module_name}{suffix} (\x01",
+   \             gen2port              : " u_{prefix}{module_name}{suffix}",
+   \             start_ports           : " (\x01",
    \                port_list_func     : function('s:instanceIOFormatter'),
    \                port_list_sep      : ",\x01",
    \             end_ports             : "\x01)",
@@ -148,7 +149,7 @@ function! vlsi#v_sv#YankInterface() abort
             continue
         endif
         "parameter a = value;
-        let linelist = matchlist(curline,'\c^\s*parameter\s*\(' . idregex . '\)\s*=\s*\([^;,]*\S\)\s*\(;\|,\)')
+        let linelist = matchlist(curline,'\c\<parameter\s*\(' . idregex . '\)\s*=\s*\([^;,].\{-}\)\s*\(;\|,\|$\|)\|\/\)')
         if !empty(linelist)
             "TODO capture parameter type ?
             let g:interfaces[ifname].generics += [ { 'name' : linelist[1], 'type' : 'natural', 'value' : linelist[2] } ]
@@ -247,7 +248,7 @@ function! vlsi#v_sv#Yank() abort
     let idregex =  '\%(\w\+\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)*\|\%(<[if]>\%([^<]\|<[^\/]\)*<\/[if]>\)\+\)\%(\w\+\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     let mixregex = '\%([^<]*\%(<[if]>\%([^<]\|<[^/]\)*<\/[if]>\)*\)*'
     " datatype: logic, wire, AHB_BUS.master
-    let datatype = '\w\+\|\w\+\.\w\+'
+    let datatype = 'logic\|wire\|\w\+\.\w\+'
     if !exists('g:modules')
         let g:modules = {}
     endif
@@ -279,17 +280,26 @@ function! vlsi#v_sv#Yank() abort
     for curline in getline(modbegin, modend)
         " skip comments
         let curline = substitute(curline,'\/\/.*$','','g')
+        " skip any leading ( or )
+        let curline = substitute(curline,'^[)( \t]*','','g')
         if curline =~ '^\s*$'
             continue
         endif
+        "if module line, put anything after optional parens
+        let linelist = matchlist(curline,'\c^\s*module\s*' . idregex . '\s*#\?(\(.*\)')
+        if !empty(linelist)
+            " let curline be anything after #( or (
+            let curline = linelist[1]
+        endif
+        
         "parameter a = value[;,]
-        let linelist = matchlist(curline,'\c\<parameter\s*\(' . idregex . '\)\s*=\s*\([^;,].\{-}\)\s*\(;\|,\|$\|)\)\+\s*$')
+        let linelist = matchlist(curline,'\c\<parameter\s*\(' . idregex . '\)\s*=\s*\([^;,].\{-}\)\s*\(;\|,\|$\|)\)')
         if !empty(linelist)
             "TODO capture parameter type ?
             let g:modules[modname].generics += [ { 'name' : linelist[1], 'type' : 'natural', 'value' : linelist[2] } ]
         endif
 
-        "port direction as in "input [31:0] bus"
+        "port direction as in "input logic [31:0] bus"
         let linelist = matchlist(curline,'\c^\s*\(input\|output\|inout\)\s\+\(.*\)$')
         if !empty(linelist)
             " adjust 'dir' variable and set kind scope to 1
@@ -310,7 +320,7 @@ function! vlsi#v_sv#Yank() abort
         endif
         " handle optional port type
         let linelist = matchlist(remainder,'\c^\s*\('.datatype.'\)\s*\(.*\)$')
-        if !empty(linelist)
+        if  !empty(linelist)
             let port_type = linelist[1]
             let remainder = linelist[2]
         else 

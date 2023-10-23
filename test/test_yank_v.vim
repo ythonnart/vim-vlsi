@@ -1,6 +1,6 @@
 " Test suite for VlsiYank for Verilog
-" Install https://github.com/h1mesuke/vim-unittest
-" Note: as of Oct 2023, the master branch fails, tag v0.5.1 works just fine
+" Install https://github.com/laurentalacoque/vim-unittest (fixed version of 
+" https://github.com/h1mesuke/vim-unittest)
 " Run :UnitTest <this file>
 "
 " where are we?
@@ -194,7 +194,7 @@ function! s:tc.test_v_yank_ports_and_generics1()
     call self.assert_yank_module_equals(l:label, s:wanted)
 endfunction
 
-function! s:tc.test_v_yank_ports_and_generics1a()
+function! s:tc.test_v_yank_ports_and_generics_on_the_same_line()
     let  l:label = 'pg1a'
     let  s:wanted = #{ lang:'verilog', generics:[#{name:'param1', type:'natural', value:'4'}], ports:[
         \ #{name:'port1', type:'wire', range:0, dir:'i'}
@@ -252,9 +252,9 @@ function! s:tc.test_v_yank_port_default_type()
     let  l:label = 'pdt'
     let  s:wanted = #{ lang:'verilog', generics:[
         \ ], ports:[
-            \ #{name:'port1', type:'wire',  range:0, dir:'i'},
-            \ #{name:'port2', type:'wire',  range:'3{{:}}0', dir:'o'},
-            \ #{name:'port3', type:'wire',  range:0, dir:'io'},
+            \ #{name:'port1', type:'',  range:0, dir:'i'},
+            \ #{name:'port2', type:'',  range:'3{{:}}0', dir:'o'},
+            \ #{name:'port3', type:'',  range:0, dir:'io'},
         \ ]}
     call self.assert_yank_module_equals(l:label, s:wanted)
 endfunction
@@ -263,22 +263,22 @@ function! s:tc.test_v_yank_port_default_type1()
     let  l:label = 'pdt1'
     let  s:wanted = #{ lang:'verilog', generics:[
         \ ], ports:[
-            \ #{name:'port1', type:'wire',  range:0, dir:'i'},
-            \ #{name:'port2', type:'wire',  range:0, dir:'i'},
-            \ #{name:'port3', type:'wire',  range:0, dir:'o'},
-            \ #{name:'port4', type:'wire',  range:0, dir:'io'},
+            \ #{name:'port1', type:'',  range:0, dir:'i'},
+            \ #{name:'port2', type:'',  range:0, dir:'i'},
+            \ #{name:'port3', type:'',  range:0, dir:'o'},
+            \ #{name:'port4', type:'',  range:0, dir:'io'},
         \ ]}
     call self.assert_yank_module_equals(l:label, s:wanted)
 endfunction
 
-function! s:tc.test_v_yank_port_default_type2()
+function! s:tc.test_v_yank_port_default_type_all_ports_on_same_line()
     let  l:label = 'pdt2'
     let  s:wanted = #{ lang:'verilog', generics:[
         \ ], ports:[
-            \ #{name:'port1', type:'wire',  range:0, dir:'i'},
-            \ #{name:'port2', type:'wire',  range:0, dir:'i'},
-            \ #{name:'port3', type:'wire',  range:0, dir:'o'},
-            \ #{name:'port4', type:'wire',  range:0, dir:'io'},
+            \ #{name:'port1', type:'',  range:0, dir:'i'},
+            \ #{name:'port2', type:'',  range:0, dir:'i'},
+            \ #{name:'port3', type:'',  range:0, dir:'o'},
+            \ #{name:'port4', type:'',  range:0, dir:'io'},
         \ ]}
     call self.assert_yank_module_equals(l:label, s:wanted)
 endfunction
