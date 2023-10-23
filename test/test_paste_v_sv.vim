@@ -33,22 +33,33 @@ function! s:test_paste_equals(wanted, entity_name, paste_command) dict
     exec a:paste_command .. " " .. a:entity_name
     " retrieve pasted text
     let pasted = self.get_canonical('scratchpad')
-    call self.assert_equal(a:wanted, pasted, '['.. a:entity_name ..'] Paste failed for command' .. a:paste_command)
+    call self.assert_equal(a:wanted, pasted, '['.. a:entity_name ..'] Paste failed for command ' .. a:paste_command)
 endfunction
 
 
 " create test functions
 function! s:install_test_functions()
     for module_name in keys(s:default_modules)
+        "systemverilog
         for command_name in keys(s:reference[module_name])
             let test_fn_name = "test_systemverilog_" .. command_name .. "_" .. module_name
             let s:tc[test_fn_name] = function('s:test_paste_equals',
                  \ [s:reference[module_name][command_name],module_name, command_name])
         endfor
+        " verilog
         for command_name in keys(s:reference_verilog[module_name])
             let test_fn_name = "test_verilog_" .. command_name .. "_" .. module_name
             let s:tc_v[test_fn_name] = function('s:test_paste_equals',
                  \ [s:reference_verilog[module_name][command_name],module_name, command_name])
+        endfor
+        " prefix / suffix
+        for command_name in keys(s:reference_verilog_prefix_suffix[module_name])
+            let elements = split(command_name)
+            let cmd = elements[0]
+            let exec_command = join([cmd, module_name, elements[1], elements[2]])
+            let test_fn_name = "test_verilog_prefix_suffix_" .. cmd .. "_" .. module_name
+            let s:tc_v[test_fn_name] = function('s:test_paste_equals',
+                 \ [s:reference_verilog_prefix_suffix[module_name][command_name],module_name, exec_command])
         endfor
     endfor
 endfunction
@@ -261,6 +272,46 @@ let s:reference_verilog = #{
                 \ VlsiPasteAsDefinition : "module modg2p3 #( parameter param1 = 1, parameter param2 = 2 ) ( input wire port1, output wire port2, inout wire port3 ); endmodule",
                 \ VlsiPasteAsInstance   : "modg2p3 #( .param1 (1), .param2 (2) ) u_modg2p3 ( .port1 (port1), .port2 (port2), .port3 (port3) );",
                 \ VlsiPasteSignals      : "wire port1; wire port2; wire port3;",
+            \},
+\}
+
+" Reference for Verilog with prefix and suffix
+let s:reference_verilog_prefix_suffix = #{
+            \ modg0p0 : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg0p0 u_p_modg0p0_s;",
+                \ "VlsiPasteSignals _s p_"      : "",
+            \},
+            \ modg0p1 : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg0p1 u_p_modg0p1_s ( .port1 (p_port1_s) );",
+                \ "VlsiPasteSignals _s p_"      : "wire p_port1_s;",
+            \},
+            \ modg0p1_with_range : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg0p1_with_range u_p_modg0p1_with_range_s ( .port1 (p_port1_s) );",
+                \ "VlsiPasteSignals _s p_"      : "wire [size:0] p_port1_s;",
+            \},
+            \ modg0p1_with_interface : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg0p1_with_interface u_p_modg0p1_with_interface_s ( .port1_sig1 (p_port1_sig1_s), .port1_sig2 (p_port1_sig2_s) );",
+                \ "VlsiPasteSignals _s p_"      : "wire [31:0] p_port1_sig1_s; wire p_port1_sig2_s;",
+            \},
+            \ modg1p0 : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg1p0 #( .param1 (1) ) u_p_modg1p0_s;",
+                \ "VlsiPasteSignals _s p_"      : "",
+            \},
+            \ modg1p1 : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg1p1 #( .param1 (1) ) u_p_modg1p1_s ( .port1 (p_port1_s) );",
+                \ "VlsiPasteSignals _s p_"      : "wire p_port1_s;",
+            \},
+            \ modg2p0 : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg2p0 #( .param1 (1), .param2 (2) ) u_p_modg2p0_s;",
+                \ "VlsiPasteSignals _s p_"      : "",
+            \},
+            \ modg0p3 : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg0p3 u_p_modg0p3_s ( .port1 (p_port1_s), .port2 (p_port2_s), .port3 (p_port3_s) );",
+                \ "VlsiPasteSignals _s p_"      : "wire p_port1_s; wire p_port2_s; wire p_port3_s;",
+            \},
+            \ modg2p3 : {
+                \ "VlsiPasteAsInstance _s p_"   : "modg2p3 #( .param1 (1), .param2 (2) ) u_p_modg2p3_s ( .port1 (p_port1_s), .port2 (p_port2_s), .port3 (p_port3_s) );",
+                \ "VlsiPasteSignals _s p_"      : "wire p_port1_s; wire p_port2_s; wire p_port3_s;",
             \},
 \}
 

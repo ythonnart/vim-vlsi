@@ -222,7 +222,6 @@ function! vlsi#portIterator(portList, formatter, suffix='', prefix='', expand=v:
                                     let l:if_ports[0] =  "    ".. b:vlsi_config.comment .." Expansion of interface "..item.type .. " start\x01" .. l:if_ports[0]
                                     "let l:if_ports = l:if_ports + ["    ".. b:vlsi_config.comment .." Expansion of interface "..item.type .. " end"]
                                     let l:ports = extend(l:ports, l:if_ports)
-                                    echom "l:if_ports: " .. string(l:if_ports)
                                     continue
                                 else
                                     " align-pass
