@@ -31,6 +31,13 @@ sub popscope {
     $$scope_ref=~s/(::)?[^:]*$//;
 }
 
+sub cleanup {
+    # cleanup argument string by keeping only the first non-blank field
+    my $value = shift;
+    $value=~ m/^\s*(\S+)/;
+    return $1
+}
+
 @ARGV = grep {! /^-/} @ARGV;
 while(<>) {
     chomp;
@@ -40,16 +47,16 @@ while(<>) {
     if (/^\s*<s>/) {
         $_.=<> until (/<\/s>/ or eof);
 
-    } elsif (/^\s*module\s+($idregex)\s*/i) { $name=$1; $kind='m'; $sig="";
+    } elsif (/^\s*module\s+($idregex)\s*/i) { $name=cleanup($1); $kind='m'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
-    } elsif (/^\s*interface\s+($idregex)\s*/i) { $name=$1; $kind='I'; $sig="";
+    } elsif (/^\s*interface\s+($idregex)\s*/i) { $name=cleanup($1); $kind='I'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
 
-    } elsif (/^\s*(localparam|parameter)\s+(?:$datatype\s+)?(?:\[[^\]]+\]\s+)?($idregex)\s*=\s*($scalar)?\s*[;,]?/i) { $name=$2; $kind='g'; $sig="";
+    } elsif (/^\s*(localparam|parameter)\s+(?:$datatype\s+)?(?:\[[^\]]+\]\s+)?($idregex)\s*=\s*($scalar)?\s*[;,]?/i) { $name=cleanup($2); $kind='g'; $sig="";
         if ($3 != ""){$sig="\tsignature: ($3)";}
         if ($1 eq "localparam") {$sig = "\taccess:private$sig";}
         else {$sig ="\taccess:public$sig";}
@@ -72,7 +79,7 @@ while(<>) {
         $_=~s/\s*;.*//;
         for my $port (split(/\s*,\s*/s,$_)) {
             next if $port !~ /($idregex)/;
-            $name=$port;$sig="\tsignature: ($subkind)";
+            $name=cleanup($port);$sig="\tsignature: ($subkind)";
             print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
         }
     } elsif (/^\s*(\w+\.\w+)\b(.*)/i) {$kind='p'; $subkind=$1; $_=$2;
@@ -92,7 +99,7 @@ while(<>) {
         for my $port (split(/\s*,\s*/s,$_)) {
             next if $port !~ /($idregex)/;
             $port=~ s/^\s+|\s+$//g; # trim whitespaces at begining and end
-            $name=$port;$sig="\tsignature: ($subkind)";
+            $name=cleanup($port);$sig="\tsignature: ($subkind)";
             print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
         }
     } elsif (/^\s*($datatype)\b/i) { $kind='s'; $subkind=lc($1);
@@ -105,29 +112,29 @@ while(<>) {
         for my $signal (split(/\s*,\s*/s,$_)) {
             next if $signal eq "";
             $signal=~/($idregex)/;
-            $name=$signal;$sig="\tsignature: ($subkind)";
+            $name=cleanup($signal);$sig="\tsignature: ($subkind)";
             print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::signals$sig\n";
         }
 
     } elsif (/^\s*initial\b/i) {
         $_.=<> until (/begin|;/ or eof);
-        if(/^\s*initial\s*(?:\s*begin\s*:\s*($idregex))?/i) { $name=$1?$1:"line$."; $kind='r';$sig="\tsignature: initial";
+        if(/^\s*initial\s*(?:\s*begin\s*:\s*($idregex))?/i) { $name=cleanup($1)?cleanup($1):"line$."; $kind='r';$sig="\tsignature: initial";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
         }
 
     } elsif (/^\s*always\b/i) {
         $_.=<> until (/begin|;/ or eof);
-        if(/^\s*always\s*(|_comb|_latch|_ff|@\s*\([^)]*\))(?:\s*begin\s*:\s*($idregex))?/i) { $name=$2?$2:"line$."; $kind='r';$sig="\tsignature: always$1";
+        if(/^\s*always\s*(|_comb|_latch|_ff|@\s*\([^)]*\))(?:\s*begin\s*:\s*($idregex))?/i) { $name=cleanup($2)?cleanup($2):"line$."; $kind='r';$sig="\tsignature: always$1";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
         }
 
     } elsif (/^\s*($idregex\s*:\s*)?(for|while|repeat|if|case|null|disable|assign|deassign)\b/i) {
         # skip tag: assign ...
-    }elsif(/^\s*modport\s+($idregex)/i){$kind='P'; $name=$1; $sig="";
+    }elsif(/^\s*modport\s+($idregex)/i){$kind='P'; $name=cleanup($1); $sig="";
         # interface modports
         $_.=<> until (/;/ or eof);
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::modports$sig\n";
-    } elsif (/^\s*($idregex)\s+($idregex)/i) { $name=$2; $kind='i';$sig="\tsignature: ($1)";
+    } elsif (/^\s*($idregex)\s+($idregex)/i) { $name=cleanup($2); $kind='i';$sig="\tsignature: ($1)";
         # simple instances 'module module_instance_name'
         # eat everything until ; (end of instance)
         $_.=<> until (/;/ or eof);
@@ -139,12 +146,12 @@ while(<>) {
         # eat comments
         $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
         $_ =~ m/[)]\s*($idregex)\s*/si;
-        $name=$1;
+        $name=cleanup($1);
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
 
-    }elsif(/^\s*`include\s*["<]\s*(\S+?)\s*[">]/i){$kind='h'; $name=$1;
+    }elsif(/^\s*`include\s*["<]\s*(\S+?)\s*[">]/i){$kind='h'; $name=cleanup($1);
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\n";
-    }elsif(/^\s*`define\s+(\w+)\s*($scalar)?/i){$kind='d'; $name=$1; $sig="";
+    }elsif(/^\s*`define\s+(\w+)\s*($scalar)?/i){$kind='d'; $name=cleanup($1); $sig="";
         if ($2 != "") {$sig = "\tsignature: ($2)";}
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
     }elsif (/^\s*(endmodule|endinterface)\b/i) { popscope(\$scope);
@@ -156,7 +163,7 @@ while(<>) {
         $_.=<> until (/;/ or eof);
         $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
         $_ =~ m/[)]\s*($idregex)\s*/si;
-        $name=$1;
+        $name=cleanup($1);
         $kind='i';
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
     }else {
