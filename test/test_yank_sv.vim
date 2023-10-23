@@ -213,6 +213,16 @@ function! s:tc.test_sv_yank_generics_multi()
         \ ], ports:[]}
     call self.assert_yank_module_equals(l:label, s:wanted)
 endfunction
+
+function! s:tc.test_sv_yank_generics_in_body()
+    let  l:label = 'generics_in_body'
+    let  s:wanted = #{ lang:'systemverilog', generics:[
+                \ #{name:'param1', type:'natural', value:'1'},
+                \ #{name:'param2', type:'natural', value:'2'},
+                \ ], ports:[]}
+    call self.assert_yank_module_equals(l:label, s:wanted)
+endfunction
+
 " }}}
 "--------------------------------------------------------------------------------
 " Ports Tests
@@ -245,6 +255,16 @@ endfunction
 
 function! s:tc.test_sv_yank_ports_multi()
     let  l:label = 'ports_multi'
+    let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
+                \ #{name:'port1', type:'logic', range:0, dir:'i'},
+                \ #{name:'port2', type:'logic', range:0, dir:'o'},
+                \ #{name:'port3', type:'logic', range:0, dir:'io'},
+                \ ]}
+    call self.assert_yank_module_equals(l:label, s:wanted)
+endfunction
+
+function! s:tc.test_sv_yank_ports_multi_in_body()
+    let  l:label = 'ports_multi_in_body'
     let  s:wanted = #{ lang:'systemverilog', generics:[], ports:[
                 \ #{name:'port1', type:'logic', range:0, dir:'i'},
                 \ #{name:'port2', type:'logic', range:0, dir:'o'},

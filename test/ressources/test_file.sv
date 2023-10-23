@@ -45,6 +45,13 @@ module generics_multi #(
 endmodule
 // end generics_multi
 
+// begin generics_in_body
+module generics_in_body;
+    parameter param1 = 1;
+    parameter param2 = 2;
+endmodule
+// end generics_in_body
+
 ////////////////////////////////////////////////////////////////////////////////
 // Ports test (fully qualified)
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +81,17 @@ module ports_multi (
 );
 endmodule
 // end ports_multi
+
+// begin ports_multi_in_body
+module ports_multi_in_body (
+    port1, port2, port3
+);
+    input logic port1;
+    output logic port2;
+    inout logic port3;
+endmodule
+// end ports_multi_in_body
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
