@@ -377,6 +377,12 @@ function! vlsi#GenericPaste(patterns, moduleName, suffix='', prefix='', expand=v
     " end module
     let result .= vlsi#basicFormat(mod_val,a:patterns.end_module)
 
+    " We now add padding to the left of each line that is exactly 
+    " the current cursor position
+    "construct padding of spaces (with the size of current column)
+    let padding = printf(printf("%%%ds",col('.')),'')
+    " add the padding after each linebreak
+    let result = substitute(padding .. result, "\x01", "\x01" .. padding, 'g')
     " append result at cursor position
     call append(line('.'), split(l:result,"\x01") )
 endfunction
