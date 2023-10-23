@@ -1,6 +1,6 @@
 " Test suite for VlsiYank for SystemVerilog
-" Install https://github.com/h1mesuke/vim-unittest
-" Note: as of Oct 2023, the master branch fails, tag v0.5.1 works just fine
+" Install https://github.com/laurentalacoque/vim-unittest (fixed version of 
+" https://github.com/h1mesuke/vim-unittest)
 " Run :UnitTest <this file>
 "
 " where are we?
