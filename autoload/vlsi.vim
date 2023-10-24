@@ -27,36 +27,71 @@ function! vlsi#Bindings()
     command! -nargs=? VlsiList                                                    :echo join(vlsi#ListModules('<args>','',''),' ')
     command! -nargs=? VlsiListInterfaces                                          :echo join(vlsi#ListInterfaces('<args>','',''),' ')
     command! -nargs=0 VlsiDefineNew                                               :call vlsi#DefineNew()
-    command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition('<args>')
-    command! -nargs=1 -complete=customlist,vlsi#ListModules VlsiPasteAsInterface  :call b:VlsiPasteAsInterface('<args>')
+    command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition(<f-args>)
+    command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteAsInterface  :call b:VlsiPasteAsInterface(<f-args>)
     command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteAsInstance   :call b:VlsiPasteAsInstance(<f-args>)
     command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteSignals      :call b:VlsiPasteSignals(<f-args>)
 
     " <Plug> Mappings
-    noremap <silent> <Plug>VlsiYank              :call b:VlsiYank     ()<CR>
-    noremap <silent> <Plug>VlsiList              :echo join(vlsi#ListModules('<args>','',''),' ')<CR>
-    noremap <silent> <Plug>VlsiListInterface     :echo join(vlsi#ListInterfaces('<args>','',''),' ')<CR>
-    noremap <silent> <Plug>VlsiDefineNew         :call vlsi#DefineNew ()<CR>
+    noremap <silent> <Plug>VlsiYank              :call b:VlsiYank                ()<CR>
+    noremap <silent> <Plug>VlsiList              :echo join(vlsi#ListModules     ('<args>','',''),' ')<CR>
+    noremap <silent> <Plug>VlsiListInterface     :echo join(vlsi#ListInterfaces  ('<args>','',''),' ')<CR>
+    noremap <silent> <Plug>VlsiDefineNew         :call vlsi#DefineNew            ()<CR>
     noremap <silent> <Plug>VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition   ('')<CR>
-    noremap <silent> <Plug>VlsiPasteAsInterface  :call b:VlsiPasteAsInterface('')<CR>
-    noremap <silent> <Plug>VlsiPasteAsInstance   :call b:VlsiPasteAsInstance ('')<CR>
-    noremap <silent> <Plug>VlsiPasteSignals      :call b:VlsiPasteSignals    ('')<CR>
+    noremap <silent> <Plug>VlsiPasteAsInterface  :call b:VlsiPasteAsInterface    ('')<CR>
+    noremap <silent> <Plug>VlsiPasteAsInstance   :call b:VlsiPasteAsInstance     ('')<CR>
+    noremap <silent> <Plug>VlsiPasteSignals      :call b:VlsiPasteSignals        ('')<CR>
 
     " Default mappings
     if !hasmapto('<Plug>VlsiDefineNew') &&  maparg('<M-S-F6>','n') ==# ''
         nmap <M-S-F6>  <Plug>VlsiDefineNew
     endif
-    if !hasmapto('<Plug>VlsiYank') &&  maparg('<F6>','n') ==# ''
-        nmap <F6>  <Plug>VlsiYank
+
+    if !hasmapto('<Plug>VlsiYank') 
+        if maparg('<F6>','n') ==# ''
+            nmap <F6>  <Plug>VlsiYank
+        endif
+        if maparg('<leader>y','n') ==# ''
+            nmap <leader>y <Plug>VlsiYank
+        endif
     endif
-    if !hasmapto('<Plug>VlsiPasteAsDefinition') &&  maparg('<S-F6>','n') ==# ''
-        nmap <S-F6>  <Plug>VlsiPasteAsDefinition
+
+    if !hasmapto('<Plug>VlsiPasteAsDefinition')
+        if maparg('<S-F6>','n') ==# ''
+            nmap <S-F6>  <Plug>VlsiPasteAsDefinition
+        endif
+        "pe as in paste entity
+        if maparg('<leader>pe','n') ==# ''
+            nmap <leader>pe <Plug>VlsiPasteAsDefinition
+        endif
+        "pm as in paste module
+        if maparg('<leader>pm','n') ==# ''
+            nmap <leader>pm <Plug>VlsiPasteAsDefinition
+        endif
     endif
-    if !hasmapto('<Plug>VlsiPasteAsInterface') &&  maparg('<C-F6>','n') ==# ''
-        nmap <C-F6>  <Plug>VlsiPasteAsInterface
+    if !hasmapto('<Plug>VlsiPasteAsInterface')
+        if maparg('<C-F6>','n') ==# ''
+            nmap <C-F6>  <Plug>VlsiPasteAsInterface
+        endif
+        "pc as in paste component
+        if maparg('<leader>pc','n') ==# ''
+            nmap <leader>pc <Plug>VlsiPasteAsInterface
+        endif
     endif
-    if !hasmapto('<Plug>VlsiPasteAsInstance') &&  maparg('<M-F6>','n') ==# ''
-        nmap <M-F6>  <Plug>VlsiPasteAsInstance
+    if !hasmapto('<Plug>VlsiPasteAsInstance') 
+        if maparg('<M-F6>','n') ==# ''
+            nmap <M-F6>  <Plug>VlsiPasteAsInstance
+        endif
+        "pi as in paste instance
+        if maparg('<leader>pi','n') ==# ''
+            nmap <leader>pi <Plug>VlsiPasteAsInstance
+        endif
+    endif
+    if !hasmapto('<Plug>VlsiPasteSignals') 
+        "ps as in paste signals
+        if maparg('<leader>ps','n') ==# ''
+            nmap <leader>ps <Plug>VlsiPasteSignals
+        endif
     endif
 endfunction
 
