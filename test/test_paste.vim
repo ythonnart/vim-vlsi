@@ -10,12 +10,12 @@ let s:here= expand('<sfile>:p:h')
 " Helper functions
 "--------------------------------------------------------------------------------
 " {{{ 1
-function! s:get_canonical(tag) dict
+function! s:get_canonical(comment_start, tag) dict
  " get the line array
  let line_array = self.data.get(a:tag)
  " remove comments
  for i in range( len(line_array) )
-     let line_array[i] = substitute(line_array[i],'\/\/.*$','','g')
+     let line_array[i] = substitute(line_array[i],a:comment_start ..'.*$','','g')
  endfor
  " join with spaces
  let line = join(line_array, ' ')
@@ -52,7 +52,7 @@ function! s:install_test_functions()
             let s:tc_v[test_fn_name] = function('s:test_paste_equals',
                  \ [s:reference_verilog[module_name][command_name],module_name, command_name])
         endfor
-        " prefix / suffix
+        " verilog prefix / suffix
         for command_name in keys(s:reference_verilog_prefix_suffix[module_name])
             let elements = split(command_name)
             let cmd = elements[0]
@@ -60,6 +60,21 @@ function! s:install_test_functions()
             let test_fn_name = "test_verilog_prefix_suffix_" .. cmd .. "_" .. module_name
             let s:tc_v[test_fn_name] = function('s:test_paste_equals',
                  \ [s:reference_verilog_prefix_suffix[module_name][command_name],module_name, exec_command])
+        endfor
+        " vhdl
+        for command_name in keys(s:reference_vhdl[module_name])
+            let test_fn_name = "test_vhdl_" .. command_name .. "_" .. module_name
+            let s:tc_vhdl[test_fn_name] = function('s:test_paste_equals',
+                 \ [s:reference_vhdl[module_name][command_name],module_name, command_name])
+        endfor
+    endfor
+    " vhdl with prefix and suffix
+    for module_name in keys(s:reference_vhdl_prefix_suffix)
+        for command_name in keys(s:reference_vhdl_prefix_suffix[module_name])
+            let test_fn_name = "test_vhdl_prefix_suffix_" .. command_name .. "_" .. module_name
+            let command = command_name .. " " .. module_name .." _s p_"
+            let s:tc_vhdl[test_fn_name] = function('s:test_paste_equals',
+                 \ [s:reference_vhdl_prefix_suffix[module_name][command_name],module_name, command])
         endfor
     endfor
 endfunction
@@ -69,9 +84,11 @@ endfunction
 " Testcases
 "--------------------------------------------------------------------------------
 "systemverilog
-let s:tc  = unittest#testcase#new("Test VlsiPaste functions for SystemVerilog", {'data' : s:here .. '/ressources/test_file.sv'})
+let s:tc      = unittest#testcase#new("Test VlsiPaste functions for SystemVerilog", {'data' : s:here .. '/ressources/test_file.sv'})
 "verilog
-let s:tc_v = unittest#testcase#new("Test VlsiPaste functions for Verilog",      {'data' : s:here .. '/ressources/test_file.v'})
+let s:tc_v    = unittest#testcase#new("Test VlsiPaste functions for Verilog",       {'data' : s:here .. '/ressources/test_file.v'})
+"vhdl
+let s:tc_vhdl = unittest#testcase#new("Test VlsiPaste functions for Vhdl",          {'data' : s:here .. '/ressources/test_file.vhd'})
 
 "--------------------------------------------------------------------------------
 " Unittest function auto-generation
@@ -315,6 +332,73 @@ let s:reference_verilog_prefix_suffix = #{
             \},
 \}
 
+" Reference for Verilog
+let s:reference_vhdl = #{
+            \ modg0p0 : #{
+                \ VlsiPasteAsDefinition : "entity modg0p0 is end entity modg0p0;",
+                \ VlsiPasteAsInterface  : "component modg0p0 is end component modg0p0;",
+                \ VlsiPasteAsInstance   : "u_modg0p0 : modg0p0 ;",
+                \ VlsiPasteSignals      : "",
+            \},
+            \ modg0p1 : #{
+                \ VlsiPasteAsDefinition : "entity modg0p1 is port ( port1 : in std_logic ); end entity modg0p1;",
+                \ VlsiPasteAsInterface  : "component modg0p1 is port ( port1 : in std_logic ); end component modg0p1;",
+                \ VlsiPasteAsInstance   : "u_modg0p1 : modg0p1 port map ( port1 => port1 );",
+                \ VlsiPasteSignals      : "signal port1 : std_logic;",
+            \},
+            \ modg0p1_with_range : #{
+                \ VlsiPasteAsDefinition : "entity modg0p1_with_range is port ( port1 : in std_logic_vector(size downto 0) ); end entity modg0p1_with_range;",
+                \ VlsiPasteAsInterface  : "component modg0p1_with_range is port ( port1 : in std_logic_vector(size downto 0) ); end component modg0p1_with_range;",
+                \ VlsiPasteAsInstance   : "u_modg0p1_with_range : modg0p1_with_range port map ( port1 => port1 );",
+                \ VlsiPasteSignals      : "signal port1 : std_logic_vector(size downto 0);",
+            \},
+            \ modg0p1_with_interface : #{
+                \ VlsiPasteAsDefinition : "entity modg0p1_with_interface is port ( port1_sig1 : in std_logic_vector(31 downto 0); port1_sig2 : out std_logic ); end entity modg0p1_with_interface;",
+                \ VlsiPasteAsInterface  : "component modg0p1_with_interface is port ( port1_sig1 : in std_logic_vector(31 downto 0); port1_sig2 : out std_logic ); end component modg0p1_with_interface;",
+                \ VlsiPasteAsInstance   : "u_modg0p1_with_interface : modg0p1_with_interface port map ( port1_sig1 => port1_sig1, port1_sig2 => port1_sig2 );",
+                \ VlsiPasteSignals      : "signal port1_sig1 : std_logic_vector(31 downto 0); signal port1_sig2 : std_logic ;",
+            \},
+            \ modg1p0 : #{
+                \ VlsiPasteAsDefinition : "entity modg1p0 is generic ( param1 : natural := 1 ); end entity modg1p0;",
+                \ VlsiPasteAsInterface  : "component modg1p0 is generic ( param1 : natural := 1 ); end component modg1p0;",
+                \ VlsiPasteAsInstance   : "u_modg1p0 : modg1p0 generic map ( param1 => 1 ) ;",
+                \ VlsiPasteSignals      : "",
+            \},
+            \ modg1p1 : #{
+                \ VlsiPasteAsDefinition : "entity modg1p1 is generic ( param1 : natural := 1 ); port ( port1 : in std_logic ); end entity modg1p1;",
+                \ VlsiPasteAsInterface  : "component modg1p1 is generic ( param1 : natural := 1 ); port ( port1 : in std_logic ); end component modg1p1;",
+                \ VlsiPasteAsInstance   : "u_modg1p1 : modg1p1 generic map ( param1 => 1 ) port map ( port1 => port1 );",
+                \ VlsiPasteSignals      : "signal port1 : std_logic;",
+            \},
+            \ modg2p0 : #{
+                \ VlsiPasteAsDefinition : "entity modg2p0 is generic ( param1 : natural := 1; param2 : natural := 2 ); end entity modg2p0;",
+                \ VlsiPasteAsInterface  : "component modg2p0 is generic ( param1 : natural := 1; param2 : natural := 2 ); end component modg2p0;",
+                \ VlsiPasteAsInstance   : "u_modg2p0 : modg2p0 generic map ( param1 => 1, param2 => 2 ) ;",
+                \ VlsiPasteSignals      : "",
+            \},
+            \ modg0p3 : #{
+                \ VlsiPasteAsDefinition : "entity modg0p3 is port ( port1 : in std_logic; port2 : out std_logic; port3 : inout std_logic ); end entity modg0p3;",
+                \ VlsiPasteAsInterface  : "component modg0p3 is port ( port1 : in std_logic; port2 : out std_logic; port3 : inout std_logic ); end component modg0p3;",
+                \ VlsiPasteAsInstance   : "u_modg0p3 : modg0p3 port map ( port1 => port1, port2 => port2, port3 => port3 );",
+                \ VlsiPasteSignals      : "signal port1 : std_logic; signal port2 : std_logic; signal port3 : std_logic;",
+            \},
+            \ modg2p3 : #{
+                \ VlsiPasteAsDefinition : "entity modg2p3 is generic ( param1 : natural := 1; param2 : natural := 2 ); port ( port1 : in std_logic; port2 : out std_logic; port3 : inout std_logic ); end entity modg2p3;",
+                \ VlsiPasteAsInterface  : "component modg2p3 is generic ( param1 : natural := 1; param2 : natural := 2 ); port ( port1 : in std_logic; port2 : out std_logic; port3 : inout std_logic ); end component modg2p3;",
+                \ VlsiPasteAsInstance   : "u_modg2p3 : modg2p3 generic map ( param1 => 1, param2 => 2 ) port map ( port1 => port1, port2 => port2, port3 => port3 );",
+                \ VlsiPasteSignals      : "signal port1 : std_logic; signal port2 : std_logic; signal port3 : std_logic;",
+            \},
+\}
+
+let s:reference_vhdl_prefix_suffix = #{
+    \ modg2p3 : {
+        \ "VlsiPasteAsDefinition" : "",
+        \ "VlsiPasteAsInterface"  : "",
+        \ "VlsiPasteAsInstance"   : "u_p_modg2p3_s : modg2p3 generic map ( param1 => 1, param2 => 2 ) port map ( port1 => p_port1_s, port2 => p_port2_s, port3 => p_port3_s );",
+        \ "VlsiPasteSignals"      : "signal p_port1_s : std_logic; signal p_port2_s : std_logic; signal p_port3_s : std_logic;",
+    \},
+\}
+
 " }}}
 " }}}
 "--------------------------------------------------------------------------------
@@ -326,13 +410,17 @@ function! s:tc.SETUP()
     " define markers for data accessors
     call self.puts("Setting marker format for SystemVerilog")
     let self.data.marker_formats = ['// begin %s', '// end %s']
-    let s:tc.get_canonical = function ('s:get_canonical')
+    let s:tc.get_canonical = function ('s:get_canonical',['\/\/'])
 endfunction
-function! s:tc_v.SETUP()
-    " define markers for data accessors
+function! s:tc_v.SETUP() " define markers for data accessors
     call self.puts("Setting marker format for Verilog")
     let self.data.marker_formats = ['// begin %s', '// end %s']
-    let s:tc_v.get_canonical = function ('s:get_canonical')
+    let s:tc_v.get_canonical = function ('s:get_canonical',['\/\/'])
+endfunction
+function! s:tc_vhdl.SETUP() " define markers for data accessors
+    call self.puts("Setting marker format for Vhdl")
+    let self.data.marker_formats = ['-- begin %s', '-- end %s']
+    let s:tc_vhdl.get_canonical = function ('s:get_canonical',['--'])
 endfunction
 
 """ every test setup
@@ -343,6 +431,12 @@ function! s:tc.setup()
 endfunction
 
 function! s:tc_v.setup()
+    " Always start with a predefined module
+    let g:modules    = s:default_modules
+    let g:interfaces = s:default_interface
+endfunction
+
+function! s:tc_vhdl.setup()
     " Always start with a predefined module
     let g:modules    = s:default_modules
     let g:interfaces = s:default_interface
