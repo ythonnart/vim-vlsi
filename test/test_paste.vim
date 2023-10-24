@@ -85,10 +85,16 @@ endfunction
 "--------------------------------------------------------------------------------
 "systemverilog
 let s:tc      = unittest#testcase#new("Test VlsiPaste functions for SystemVerilog", {'data' : s:here .. '/ressources/test_file.sv'})
+"systemverilog-compile
+let s:co_sverilog = unittest#testcase#new("SystemVerilog compilation for VlsiPaste functions")
 "verilog
 let s:tc_v    = unittest#testcase#new("Test VlsiPaste functions for Verilog",       {'data' : s:here .. '/ressources/test_file.v'})
+"verilog-compile
+let s:co_verilog = unittest#testcase#new("Verilog compilation for VlsiPaste functions")
 "vhdl
 let s:tc_vhdl = unittest#testcase#new("Test VlsiPaste functions for Vhdl",          {'data' : s:here .. '/ressources/test_file.vhd'})
+"vhdl-compile
+let s:co_vhdl = unittest#testcase#new("VHDL compilation for VlsiPaste functions")
 
 "--------------------------------------------------------------------------------
 " Unittest function auto-generation
@@ -412,15 +418,42 @@ function! s:tc.SETUP()
     let self.data.marker_formats = ['// begin %s', '// end %s']
     let s:tc.get_canonical = function ('s:get_canonical',['\/\/'])
 endfunction
+
 function! s:tc_v.SETUP() " define markers for data accessors
     call self.puts("Setting marker format for Verilog")
     let self.data.marker_formats = ['// begin %s', '// end %s']
     let s:tc_v.get_canonical = function ('s:get_canonical',['\/\/'])
 endfunction
+
 function! s:tc_vhdl.SETUP() " define markers for data accessors
     call self.puts("Setting marker format for Vhdl")
     let self.data.marker_formats = ['-- begin %s', '-- end %s']
     let s:tc_vhdl.get_canonical = function ('s:get_canonical',['--'])
+endfunction
+
+function! s:co_vhdl.SETUP() " define markers for data accessors
+    call self.puts("Setting marker format for Vhdl")
+    let self.data.marker_formats = ['-- begin %s', '-- end %s']
+    let s:vcom_ok = system('vcom')
+    if s:vcom_ok =~ "not found"
+        let s:vcom_ok = 0
+        call self.puts("vcom command not found, please use setcad")
+    else
+        let s:vcom_ok = 1
+    endif
+endfunction
+
+function! s:co_verilog.SETUP() " define markers for data accessors
+    call self.puts("Setting marker format for Verilog")
+    let self.data.marker_formats = ['// begin %s', '// end %s']
+    let s:tc_v.get_canonical = function ('s:get_canonical',['\/\/'])
+    let s:vlog_ok = system('vlog')
+    if s:vlog_ok =~ "not found"
+        let s:vlog_ok = 0
+        call self.puts("vlog command not found, please use setcad")
+    else
+        let s:vlog_ok = 1
+    endif
 endfunction
 
 """ every test setup
@@ -442,10 +475,237 @@ function! s:tc_vhdl.setup()
     let g:interfaces = s:default_interface
 endfunction
 
+""" Compilation for vhdl
+function! s:co_vhdl.setup()
+    " Always start with a predefined module
+    let g:modules    = s:default_modules
+    let g:interfaces = s:default_interface
+    if s:vcom_ok
+        let self.tempfilename = tempname() .. ".vhd"
+        echomsg "__open_data_window__"
+        if !bufexists(self.tempfilename)
+          " The buffer doesn't exist.
+          split
+          hide edit `=self.tempfilename`
+          exec "hide read ".. s:here .. "/ressources/test_comp.vhd"
+        elseif bufwinnr(self.tempfilename) != -1
+          " The buffer exists, and it has a window.
+          execute bufwinnr(self.tempfilename) 'wincmd w'
+        else
+          " The buffer exists, but it has no window.
+          split
+          execute 'buffer' bufnr(data_file)
+        endif
+        autocmd! * <buffer>
+        0
+        /begin scratchpad/
+    endif
+endfunction
+
+function! s:co_vhdl.teardown()
+    if has_key(self,'tempfilename')
+        call self.puts("- generating file for compilation: " .. self.tempfilename)
+        exec "bdelete " .. self.tempfilename
+        "exec "!rm " .. self.tempfilename
+        unlet self.tempfilename
+    endif
+endfunction
+
+""" Compilation for verilog
+function! s:co_verilog.setup()
+    " Always start with a predefined module
+    let g:modules    = s:default_modules
+    let g:interfaces = s:default_interface
+    if s:vcom_ok
+        let self.tempfilename = tempname() .. ".v"
+        echomsg "__open_data_window__"
+        if !bufexists(self.tempfilename)
+          " The buffer doesn't exist.
+          split
+          hide edit `=self.tempfilename`
+          exec "hide read ".. s:here .. "/ressources/test_comp.v"
+        elseif bufwinnr(self.tempfilename) != -1
+          " The buffer exists, and it has a window.
+          execute bufwinnr(self.tempfilename) 'wincmd w'
+        else
+          " The buffer exists, but it has no window.
+          split
+          execute 'buffer' bufnr(data_file)
+        endif
+        autocmd! * <buffer>
+        0
+        /begin scratchpad/
+    endif
+endfunction
+
+function! s:co_verilog.teardown()
+    if has_key(self,'tempfilename')
+        call self.puts("- generating file for compilation: " .. self.tempfilename)
+        exec "bdelete " .. self.tempfilename
+        "exec "!rm " .. self.tempfilename
+        unlet self.tempfilename
+    endif
+endfunction
+
+""" Compilation for systemverilog
+function! s:co_sverilog.setup()
+    " Always start with a predefined module
+    let g:modules    = s:default_modules
+    let g:interfaces = s:default_interface
+    if s:vcom_ok
+        let self.tempfilename = tempname() .. ".sv"
+        echomsg "__open_data_window__"
+        if !bufexists(self.tempfilename)
+          " The buffer doesn't exist.
+          split
+          hide edit `=self.tempfilename`
+          exec "hide read ".. s:here .. "/ressources/test_comp.sv"
+        elseif bufwinnr(self.tempfilename) != -1
+          " The buffer exists, and it has a window.
+          execute bufwinnr(self.tempfilename) 'wincmd w'
+        else
+          " The buffer exists, but it has no window.
+          split
+          execute 'buffer' bufnr(data_file)
+        endif
+        autocmd! * <buffer>
+        0
+        /begin scratchpad/
+    endif
+endfunction
+
+function! s:co_sverilog.teardown()
+    if has_key(self,'tempfilename')
+        call self.puts("- generating file for compilation: " .. self.tempfilename)
+        exec "bdelete " .. self.tempfilename
+        "exec "!rm " .. self.tempfilename
+        unlet self.tempfilename
+    endif
+endfunction
 " }}}
 
 """ test functions
 
+""" generate basic paste functions
 call s:install_test_functions()
 
+""" test the compilation of a VHDL entity
+function s:co_vhdl.test_vhdl_compilation_entity()
+    if !s:vcom_ok
+        call self.puts("VCOM not found")
+        return
+    endif
+    if !has_key(self,"tempfilename")
+        call self.puts("tempfilename is not defined!")
+        return
+    endif
+
+    VlsiPasteAsDefinition modg2p3
+    wq
+
+    let vcom_output = system('vcom ' .. self.tempfilename)
+
+    call self.assert_equal(0,v:shell_error, "Compilation error")
+
+    if v:shell_error != 0
+        call self.puts(vcom_output)
+    endif
+endfunction
+
+""" test the compilation of entity, architecture, component and instances
+function s:co_vhdl.test_vhdl_compilation_entity_architecture()
+    if !s:vcom_ok
+        call self.puts("VCOM not found")
+        return
+    endif
+    if !has_key(self,"tempfilename")
+        call self.puts("tempfilename is not defined!")
+        return
+    endif
+
+    " paste entity
+    VlsiPasteAsDefinition modg2p3
+    call append(line('.'),["","architecture test of modg2p3 is"])
+    norm 2j
+    " paste component
+    VlsiPasteAsInterface modg0p3
+    VlsiPasteSignals modg0p3 _north
+    VlsiPasteSignals modg0p3 _south
+    call append(line('.'),["begin"])
+    norm 1j
+    VlsiPasteAsInstance modg0p3 _north
+    VlsiPasteAsInstance modg0p3 _south
+    call append(line('.'),["end architecture test;"])
+    norm 1j
+
+    w
+    let vcom_output = system('vcom ' .. self.tempfilename)
+    call self.assert_equal(0,v:shell_error, "Compilation error")
+    if v:shell_error != 0
+        call self.puts(vcom_output)
+    endif
+
+endfunction
+
+" generation and compilation of complex verilog
+function s:co_verilog.test_verilog_compilation_complex()
+    if !s:vlog_ok
+        call self.puts("VLOG not found")
+        return
+    endif
+    if !has_key(self,"tempfilename")
+        call self.puts("tempfilename is not defined!")
+        return
+    endif
+
+    " paste entity
+    VlsiPasteAsDefinition modg2p3
+    "move two lines up to be in the module
+    norm 2k
+    " paste signals
+    VlsiPasteSignals modg0p3 _north
+    VlsiPasteSignals modg0p3 _south
+    " paste instances
+    VlsiPasteAsInstance modg0p3 _north
+    VlsiPasteAsInstance modg0p3 _south
+
+    w
+    let vcom_output = system('vlog ' .. self.tempfilename)
+    call self.assert_equal(0,v:shell_error, "Compilation error")
+    if v:shell_error != 0
+        call self.puts(vcom_output)
+    endif
+
+endfunction
+
+" generation and compilation of complex systemverilog
+function s:co_sverilog.test_systemverilog_compilation_complex()
+    if !s:vlog_ok
+        call self.puts("VLOG not found")
+        return
+    endif
+    if !has_key(self,"tempfilename")
+        call self.puts("tempfilename is not defined!")
+        return
+    endif
+
+    " paste entity
+    VlsiPasteAsDefinition modg2p3
+    "move two lines up to be in the module
+    norm 2k
+    " paste signals
+    VlsiPasteSignals modg0p3 _north
+    VlsiPasteSignals modg0p3 _south
+    " paste instances
+    VlsiPasteAsInstance modg0p3 _north
+    VlsiPasteAsInstance modg0p3 _south
+
+    w
+    let vcom_output = system('vlog ' .. self.tempfilename)
+    call self.assert_equal(0,v:shell_error, "Compilation error")
+    if v:shell_error != 0
+        call self.puts(vcom_output)
+    endif
+
+endfunction
 " vim: :fdm=marker
