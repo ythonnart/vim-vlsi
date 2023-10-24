@@ -313,7 +313,7 @@ endfunction
 " the generics_item_func formatter will be called with g:modules.moduleName.generics items
 " the port_list_func formatter will be called by vlsi#portIterator enhanced g:modules.moduleName.ports
 "
-function! vlsi#GenericPaste(patterns, moduleName, suffix='', prefix='', expand=v:false)
+function! vlsi#GenericPaste(patterns, moduleName='', suffix='', prefix='', expand=v:false)
     let result = ""
     " Fool-proof
     if !exists('g:modules')
@@ -323,8 +323,15 @@ function! vlsi#GenericPaste(patterns, moduleName, suffix='', prefix='', expand=v
     " Find module name or ask for it
     let moduleName = a:moduleName
     if moduleName == ''
-        let moduleName = input('Module to paste ? ', '', 'customlist,vlsi#ListModules')
-        echo "\r"
+        "unspecified modulename, do we have a last_yanked entity ?
+        if exists('g:Vlsi_last_yanked_entity')
+            " unspecified moduleName but an entity was yanked, use that
+            let moduleName= g:Vlsi_last_yanked_entity
+        else
+            " unspecified moduleName and no last_yanked entity, ask
+            let moduleName = input('Module to paste ? ', '', 'customlist,vlsi#ListModules')
+            echo "\r"
+        endif
     endif
 
     if !has_key(g:modules,moduleName)

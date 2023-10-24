@@ -186,5 +186,6 @@ function! vlsi#vhdl#Yank() abort
             let g:modules[modname].ports += [ { 'name' : linelist[1], 'dir' : dir, 'range' : range, 'type':type } ]
         endif
     endfor
+    let g:Vlsi_last_yanked_entity = modname
     echo '    Capture for entity ' . modname . 'successful!'
 endfunction

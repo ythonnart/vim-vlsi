@@ -350,5 +350,6 @@ function! vlsi#v_sv#Yank() abort
             let kind = -1
         endif
     endfor
+    let g:Vlsi_last_yanked_entity = modname
     echo '    Capture for module ' . modname . ' successful!'
 endfunction
