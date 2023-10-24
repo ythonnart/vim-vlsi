@@ -442,9 +442,16 @@ function! s:co_vhdl.SETUP() " define markers for data accessors
 endfunction
 
 function! s:co_verilog.SETUP() " define markers for data accessors
-    call self.puts("Setting marker format for Verilog")
-    let self.data.marker_formats = ['// begin %s', '// end %s']
-    let s:tc_v.get_canonical = function ('s:get_canonical',['\/\/'])
+    let s:vlog_ok = system('vlog')
+    if s:vlog_ok =~ "not found"
+        let s:vlog_ok = 0
+        call self.puts("vlog command not found, please use setcad")
+    else
+        let s:vlog_ok = 1
+    endif
+endfunction
+
+function! s:co_sverilog.SETUP() " define markers for data accessors
     let s:vlog_ok = system('vlog')
     if s:vlog_ok =~ "not found"
         let s:vlog_ok = 0
@@ -514,7 +521,7 @@ function! s:co_verilog.setup()
     " Always start with a predefined module
     let g:modules    = s:default_modules
     let g:interfaces = s:default_interface
-    if s:vcom_ok
+    if s:vlog_ok
         let self.tempfilename = tempname() .. ".v"
         echomsg "__open_data_window__"
         if !bufexists(self.tempfilename)
@@ -550,7 +557,7 @@ function! s:co_sverilog.setup()
     " Always start with a predefined module
     let g:modules    = s:default_modules
     let g:interfaces = s:default_interface
-    if s:vcom_ok
+    if s:vlog_ok
         let self.tempfilename = tempname() .. ".sv"
         echomsg "__open_data_window__"
         if !bufexists(self.tempfilename)
