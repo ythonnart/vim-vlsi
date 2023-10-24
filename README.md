@@ -26,7 +26,7 @@ Current supported filetypes:
 
 ### Commands
 `:VlsiYank                            ` Yank the module containing the cursor.
-                                       default mapping: `<M-F6>`
+                                       default mapping: `<M-F6>`, `<leader-y>`
 
 `:VlsiList                            ` Display the available module list.
                                        default mapping: not mapped
@@ -35,16 +35,16 @@ Current supported filetypes:
                                        default mapping: `<M-S-F6>`
 
 `:VlsiPasteAsDefinition [{modulename}]` Paste module definition.
-                                       default mapping: `<S-F6>`
+                                       default mapping: `<S-F6>`, `<leader>pe`, `<leader>pm`
 
 `:VlsiPasteAsInterface [{modulename}] ` Paste module interface.
-                                       default mapping: `<C-F6>`
+                                       default mapping: `<C-F6>`, `<leader>pc`
 
 `:VlsiPasteAsInstance [{modulename}]  ` Paste module as bound instance.
-                                       default mapping: `<F6>`
+                                       default mapping: `<F6>`,`<leader>pi`
 
 `:VlsiPasteSignals [{modulename}]     ` Paste module IOs as signals
-                                       default mapping: `<F6>`
+                                       default mapping: `<F6>`, `<leader>ps`
 
 ## VLSI Tagbar plugin integration
 The VLSI plugin adds support for ctags-compatible tag file generation and
