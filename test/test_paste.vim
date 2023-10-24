@@ -414,26 +414,24 @@ let s:reference_vhdl_prefix_suffix = #{
 """ Once SETUP
 function! s:tc.SETUP()
     " define markers for data accessors
-    call self.puts("Setting marker format for SystemVerilog")
+    "call self.puts("Setting marker format for SystemVerilog")
     let self.data.marker_formats = ['// begin %s', '// end %s']
     let s:tc.get_canonical = function ('s:get_canonical',['\/\/'])
 endfunction
 
 function! s:tc_v.SETUP() " define markers for data accessors
-    call self.puts("Setting marker format for Verilog")
+    "call self.puts("Setting marker format for Verilog")
     let self.data.marker_formats = ['// begin %s', '// end %s']
     let s:tc_v.get_canonical = function ('s:get_canonical',['\/\/'])
 endfunction
 
 function! s:tc_vhdl.SETUP() " define markers for data accessors
-    call self.puts("Setting marker format for Vhdl")
+    "call self.puts("Setting marker format for Vhdl")
     let self.data.marker_formats = ['-- begin %s', '-- end %s']
     let s:tc_vhdl.get_canonical = function ('s:get_canonical',['--'])
 endfunction
 
 function! s:co_vhdl.SETUP() " define markers for data accessors
-    call self.puts("Setting marker format for Vhdl")
-    let self.data.marker_formats = ['-- begin %s', '-- end %s']
     let s:vcom_ok = system('vcom')
     if s:vcom_ok =~ "not found"
         let s:vcom_ok = 0
