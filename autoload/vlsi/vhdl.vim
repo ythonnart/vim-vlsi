@@ -88,8 +88,8 @@ let vlsi#vhdl#formatPatterns = #{
    \             start_ports           : "    port map (\x01",
    \                port_list_func     : function('s:instanceIOFormatter'),
    \                port_list_sep      : ",\x01",
-   \             end_ports             : "\x01    );\x01",
-   \         end_module                : "-- end instance u_{prefix}{module_name}{suffix}\x01",
+   \             end_ports             : "\x01    )",
+   \         end_module                : ";\x01-- end instance u_{prefix}{module_name}{suffix}\x01",
    \     },
    \     signals  : #{
    \         start_module              : '',
