@@ -128,7 +128,9 @@ while(<>) {
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
         }
 
-    } elsif (/^\s*($idregex\s*:\s*)?(for|while|repeat|if|case|null|disable|assign|deassign)\b/i) {
+    }elsif(/^\s*typedef\s+[^;]+?\s(\w+);/i){$kind='t'; $name=cleanup($1); $sig="";
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\n";
+    }elsif (/^\s*($idregex\s*:\s*)?(for|while|repeat|if|case|null|disable|assign|deassign)\b/i) {
         # skip tag: assign ...
     }elsif(/^\s*modport\s+($idregex)/i){$kind='P'; $name=cleanup($1); $sig="";
         # interface modports

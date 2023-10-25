@@ -10,7 +10,7 @@ let b:vlsi_config           = #{
             \ default_vector_type:'logic',
             \ kind2dir : #{i:'input', o:'output', io:'inout'},
             \ formatRange:function("vlsi#v_sv#formatRange")}
- 
+
 " Create default bindings
 call vlsi#Bindings()
 
@@ -18,10 +18,11 @@ call vlsi#Bindings()
 let g:tagbar_type_systemverilog = {
     \ 'ctagsbin' : expand('<sfile>:p:h:h:h') . '/bin/ctags/systemverilog.pl',
     \ 'kinds'     : [
-        \ 'd:macros:1:0',
         \ 'h:headers:1:0',
-        \ 'm:modules:1:0',
+        \ 'd:macros:1:0',
+        \ 't:typedefs:1:0',
         \ 'I:interfaces:1:0',
+        \ 'm:modules:1:0',
         \ 'g:parameters:1:0',
         \ 'p:ports:1:0',
         \ 'P:modports:1:0',
@@ -32,11 +33,11 @@ let g:tagbar_type_systemverilog = {
     \ 'sro'        : '::',
     \ 'scope2kind' : {
         \ 'module'       : 'm',
-        \ 'interface'       : 'I',
+        \ 'interface'    : 'I',
         \ 'parameter'    : 'g',
         \ 'port'         : 'p',
-        \ 'modport'         : 'P',
         \ 'signal'       : 's',
+        \ 'modport'      : 'P',
         \ 'instance'     : 'i',
         \ 'process'      : 'r',
     \ },
@@ -45,8 +46,8 @@ let g:tagbar_type_systemverilog = {
         \ 'I' : 'interface',
         \ 'g' : 'parameter',
         \ 'p' : 'port',
-        \ 'P' : 'modport',
         \ 's' : 'signal',
+        \ 'P' : 'modport',
         \ 'i' : 'instance',
         \ 'r' : 'process',
     \ },
