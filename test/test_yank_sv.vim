@@ -468,5 +468,4 @@ function! s:tc.test_sv_yank_interface_with_modports()
     call self.assert_yank_interface_equals(l:label, s:wanted)
 endfunction
 " }}}
-
 " vim: :fdm=marker

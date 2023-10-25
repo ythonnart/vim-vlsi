@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 # Script to generate Exuberant-ctags/Universal-ctags compatible tag file for VHDL
-
+my $DEBUG = 0;
 my $kind="";
 my $subkind="";
 my $name="";
@@ -41,9 +41,13 @@ sub cleanup {
 @ARGV = grep {! /^-/} @ARGV;
 while(<>) {
     chomp;
+    # skip comments
+    $_ =~ s/\s*\/\/.*//g;
     $file=$ARGV;
     $address=$_;
+    $address =~ s/\//\\\//g;
     $line=$.;
+    if ($DEBUG) { print "; line:$line scope=$scope\n\t$_\n";}
     if (/^\s*<s>/) {
         $_.=<> until (/<\/s>/ or eof);
 
@@ -63,10 +67,10 @@ while(<>) {
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::generics$sig\n";
 
     } elsif (/^\s*(in|out|inout)(put)?\b/i) { $kind='p'; $subkind=lc($1);
-        # eat everything until , (end of port)
-        $_.=<> until (/,|[)]/ or eof);
+        # eat everything until , or ; (end of port)
+        $_.=<> until (/,|;|[)]/ or eof);
         # eat comments
-        $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
+        $_=~s/\/\*.*?\*\///sg;
         # remove port def
         $_=~s/\s*(in|out|inout)(put)?\s*(logic|wire)?\s*//gi;
         # remove ranges
@@ -85,9 +89,9 @@ while(<>) {
     } elsif (/^\s*(\w+\.\w+)\b(.*)/i) {$kind='p'; $subkind=$1; $_=$2;
         # interface signals
         # eat everything until , (end of port)
-        $_.=<> until (/,|[)]/ or eof);
+        $_.=<> until (/,|;|[)]/ or eof);
         # eat comments
-        $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
+        $_=~s/\/\*.*?\*\///sg;
         # remove ranges
         $_=~s/\[[^\]]+\]\s*//gi;
         # remove final )
@@ -118,13 +122,13 @@ while(<>) {
 
     } elsif (/^\s*initial\b/i) {
         $_.=<> until (/begin|;/ or eof);
-        if(/^\s*initial\s*(?:\s*begin\s*:\s*($idregex))?/i) { $name=cleanup($1)?cleanup($1):"line$."; $kind='r';$sig="\tsignature: initial";
+        if(/^\s*initial\s*(?:\s*begin\s*:\s*($idregex))?/i) { $name=cleanup($1)?cleanup($1):"line$."; $kind='r';$sig="\tsignature: (initial)";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
         }
 
-    } elsif (/^\s*always\b/i) {
+    } elsif (/^\s*always(_comb|_latch|_ff)?\b/i) {
         $_.=<> until (/begin|;/ or eof);
-        if(/^\s*always\s*(|_comb|_latch|_ff|@\s*\([^)]*\))(?:\s*begin\s*:\s*($idregex))?/i) { $name=cleanup($2)?cleanup($2):"line$."; $kind='r';$sig="\tsignature: always$1";
+        if(/^\s*always(_comb|_latch|_ff)?\s+@\(.+\)(?:\s*begin\s*:\s*($idregex))?/i) { $name=cleanup($2)?cleanup($2):"line$."; $kind='r';$sig="\tsignature: (always)$1";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
         }
 
@@ -140,7 +144,7 @@ while(<>) {
         # simple instances 'module module_instance_name'
         # eat everything until ; (end of instance)
         $_.=<> until (/;/ or eof);
-
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
     } elsif(/^\s*($idregex)\s+#\((.*)/i) { $kind='i';$sig="\tsignature: ($1)"; $_=$2;
         # module with parameters instanciation 'modname u_inst #('
         # eat everything until ; (end of instance)
@@ -159,17 +163,18 @@ while(<>) {
     }elsif (/^\s*(endmodule|endinterface)\b/i) { popscope(\$scope);
     }elsif(/^\s*(\/\/|$)/i){
         # pass comments and empty lines
-    }elsif(/^\s*($idregex)\s*$/i){
-        # single identifier: catchall for instances
-        $sig="\tsignature: ($1)";
-        $_.=<> until (/;/ or eof);
-        $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
-        $_ =~ m/[)]\s*($idregex)\s*/si;
-        $name=cleanup($1);
-        $kind='i';
-        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
+        # FAIL for single unqualified ports
+        #}elsif(/^\s*($idregex)\s*$/i){
+        #    # single identifier: catchall for instances
+        #    $sig="\tsignature: ($1)";
+        #    $_.=<> until (/;/ or eof);
+        #    $_=~s/\/\*.*?\*\///sg; $_=~s/\/\/.*//mg;
+        #    $_ =~ m/[)]\s*($idregex)\s*/si;
+        #    $name=cleanup($1);
+        #    $kind='i';
+        #    print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
     }else {
         # unseen things
-        # print ";line:$line\t$_\n";
+        if($DEBUG) {print ";line:$line\t$_\n";}
     }
 }
