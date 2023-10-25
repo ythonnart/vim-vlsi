@@ -398,8 +398,6 @@ let s:reference_vhdl = #{
 
 let s:reference_vhdl_prefix_suffix = #{
     \ modg2p3 : {
-        \ "VlsiPasteAsDefinition" : "",
-        \ "VlsiPasteAsInterface"  : "",
         \ "VlsiPasteAsInstance"   : "u_p_modg2p3_s : modg2p3 generic map ( param1 => 1, param2 => 2 ) port map ( port1 => p_port1_s, port2 => p_port2_s, port3 => p_port3_s );",
         \ "VlsiPasteSignals"      : "signal p_port1_s : std_logic; signal p_port2_s : std_logic; signal p_port3_s : std_logic;",
     \},

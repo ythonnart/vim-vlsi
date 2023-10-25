@@ -69,7 +69,7 @@ let s:expected_tags_fields = {
 "--------------------------------------------------------------------------------
 " {{{ 
 "
-function s:tctags.test_ctags_structure_valid()
+function s:tctags.test_v_sv_ctags_structure_valid()
     if !has_key(self,"ctags_out")
         return
     endif
