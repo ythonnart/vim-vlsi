@@ -2,6 +2,7 @@
 
 # Script to generate Exuberant-ctags/Universal-ctags compatible tag file for VHDL
 
+my $DEBUG = 0;
 my $kind="";
 my $name="";
 my $file="";
@@ -33,57 +34,106 @@ sub popscope {
     $$scope_ref=~s/(::)?[^:]*$//;
 }
 
+sub cleanup {
+    # cleanup argument string by keeping only the first non-blank field
+    my $value = shift;
+    $value=~ m/^\s*(\S+)/;
+    return $1
+}
+
 @ARGV = grep {! /^-/} @ARGV;
-while(<>) {
+
+my $curline = <>;
+my $running = 1;
+while($running){
+    $_ = $curline;
+    # skip comments
+    $_ =~ s/\s*--.*//g;
     chomp;
     $file=$ARGV;
     $address=$_;
     $line=$.;
+    if ($DEBUG) { print ";;;l:$line\t{$scope}\tkind:$kind\t'$_'\n";}
     if (/^\s*<s>/) {
         $_.=<> until (/<\/s>/ or eof);
 
-    } elsif (/^\s*entity\s+($idregex)\s+is/i) { $name=$1; $kind='e'; $sig="";
+    } elsif (/^\s*entity\s+($idregex)\s+is\b(.*)$/i) { $name=cleanup($1); $kind='e'; $sig="";
+        # entity start
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$sig\n";
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
-
-    } elsif (/^\s*generic\s*\(/i) { $kind='g';
-    } elsif ($kscope eq 'entity' and $kind eq 'g' and /^\s*($idregex)\s*:/i) { $name=$1; $sig="";
+        #remember rest of line
+        $curline = $2;
+        if ($curline) {next;}
+    } elsif (/^\s*generic\s*\((.*$)/i) { $kind='g';
+        #remember rest of line
+        $curline = $1; next;
+    } elsif ($kscope eq 'entity' and $kind eq 'g' and /^\s*($idregex)\s*:[^)]+\)?;?(.*)$/i) { $name=cleanup($1); $sig="";
+        #generics part, capture variable name
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::generics$sig\n";
+        $curline = $2; next;
 
-    } elsif (/^\s*port\s*\(/i) { $kind='p';
-    } elsif ($kscope eq 'entity' and $kind eq 'p' and /^\s*($idregex)\s*:\s*(in|out|inout)/i) { $name=$1;$sig="\tsignature: (".lc($2).")";
+    } elsif ($kscope eq 'entity' and $kind eq 'g' and /^\s*\)\s*;\s*(.*)$/i) {
+        #generics part that starts with ');' == end of generics
+        $curline = $1; next;
+    }elsif (/^\s*port\s*\((.*)$/i) { $kind='p';
+        #remember rest of line
+        $curline = $1;next;
+    } elsif ($kscope eq 'entity' and $kind eq 'p' and /^\s*($idregex)\s*:\s*(inout|out|in)(.*)/i) { $name=cleanup($1);$sig="\tsignature: (".lc($2).")";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::ports$sig\n";
+        $curline = $3; next;
 
-    } elsif (/^\s*end\s+(entity\s+)?\Q$curscope/i) { popscope(\$scope);
-
-    } elsif (/^\s*architecture\s+($idregex)\s+of\s+($idregex)\s+is/i) { $name=$1; $kind='a';$sig="";
+    } elsif (
+            /^\s*end\s+(entity\s+)?\Q$curscope/i
+            or
+            /^\s*end\s+entity\b/i
+      ) { 
+          # end entity;
+          # end my_entity_name;
+          popscope(\$scope);
+    } elsif (/^\s*architecture\s+($idregex)\s+of\s+($idregex)\s+is/i) { $name=cleanup($1); $kind='a';$sig="";
         $curscope=$2; $kscope=$kind2scope{'e'}; pushscope(\$scope,$curscope);
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope$sig\n";
         $curscope=$name; pushscope(\$scope,$curscope);
         $kscope=$kind2scope{$kind}; 
         $scope_body=0;
 
-    } elsif (/^\s*type\s*($idregex)\s*is/i) { $name=$1; $kind='t'; $sig="";
+    } elsif (/^\s*type\s*($idregex)\s*is/i) { $name=cleanup($1); $kind='t'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::types$sig\n";
 
-    } elsif (/^\s*signal\s*($idregex)\s*:/i) { $name=$1; $kind='s'; $sig="";
+    } elsif (/^\s*signal\s*($idregex)\s*:/i) { $name=cleanup($1); $kind='s'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::signals$sig\n";
 
-    } elsif (/^\s*component\s*($idregex)/i) { $name=$1; $kind='c'; $sig="";
+    } elsif (/^\s*component\s*($idregex)/i) { $name=cleanup($1); $kind='c'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::components$sig\n";
 
     } elsif ($kscope eq 'architecture' and /^\s*begin\b/i) { $scope_body=1;
 
-    } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*(?:($idregex)\s*:\s*(?:postponed\s*)?)?process\s*(\([^)]*\))?/i) { $name=$1?$1:"line$."; $kind='r';$sig="\tsignature: $2";
+    } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*(?:($idregex)\s*:\s*(?:postponed\s*)?)?process\s*(\([^)]*\))?/i) { $name=cleanup($1)?cleanup($1):"line$."; $kind='r';$sig="\tsignature: $2";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::processes$sig\n";
 
     } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*($idregex\s*:\s*)?(for|while|next|if|case|null|wait|return|exit|block|assert|report)\b/i) {
     
-    } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*($idregex)\s*:\s*($idregex)/i) { $name=$1; $kind='i';$sig=" ($2)";
-        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances$sig\n";
+    } elsif ($kscope eq 'architecture' and $scope_body==1 and /^\s*($idregex)\s*:\s*($idregex)/i) { $name=cleanup($1); $kind='i';$sig=" ($2)";
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::instances\tsignature:$sig\n";
 
-    } elsif (/^\s*end\s+(architecture\s+)?\Q$curscope/i) { popscope(\$scope);
-
+    } elsif (
+            /^\s*end\s+(architecture\s+)?\Q$curscope/i 
+            or
+            /^\s*end\s+architecture\b/i) {
+                #pop architecture scope
+                popscope(\$scope); $scope_body=0;
+                #pop entity scope
+                popscope(\$scope);
     }
+    else {
+        # not recognized
+        if($DEBUG) {
+            print ";;;???\n";
+        }
+    }
+
+
+    $curline = <>;
+    if($curline eq "") { $running=0; break; }
 }
