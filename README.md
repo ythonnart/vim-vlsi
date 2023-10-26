@@ -1,7 +1,7 @@
-vim-vlsim : useful scripts for VLSI design
-==========================================
+vim-vlsi : useful scripts for VLSI design
+=========================================
 
-This fork of [ythonnart/vim-vlsi](https://github.com/ythonnart/vim-vlsi)
+This update
 contains improvements (such as VlsiPasteSignals) and a deep refactoring.
 Rewriting `PasteAs*` for new languages is now much more efficient as it 
 only consists of filling a structure of patterns.
