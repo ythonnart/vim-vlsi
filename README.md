@@ -44,7 +44,7 @@ Current supported filetypes:
                                        default mapping: `<F6>`,`<leader>pi`
 
 `:VlsiPasteSignals [{modulename}]     ` Paste module IOs as signals
-                                       default mapping: `<F6>`, `<leader>ps`
+                                       default mapping: `<leader>ps`
 
 ## VLSI Tagbar plugin integration
 The VLSI plugin adds support for ctags-compatible tag file generation and
