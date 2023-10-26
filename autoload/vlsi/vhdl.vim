@@ -187,5 +187,5 @@ function! vlsi#vhdl#Yank() abort
         endif
     endfor
     let g:Vlsi_last_yanked_entity = modname
-    echo '    Capture for entity ' . modname . 'successful!'
+    echo '    Capture for entity ' . modname . ' successful!'
 endfunction

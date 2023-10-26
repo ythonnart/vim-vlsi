@@ -147,7 +147,7 @@ function! vlsi#DefineNew() abort
         let g:modules[modname].ports += [ { 'name' : name, 'dir' : dir, 'range' : range } ]
         let name = input('New port name (leave empty if no more): ')
     endwhile
-    echo '    Capture for module ' . modname . 'successful!'
+    echo '    Capture for module ' . modname . ' successful!'
 endfunction
 
 " Default function fallbacks when not defined for filetype
