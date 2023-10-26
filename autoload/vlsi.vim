@@ -48,8 +48,8 @@ function! vlsi#Bindings()
     endif
 
     if !hasmapto('<Plug>VlsiYank') 
-        if maparg('<F6>','n') ==# ''
-            nmap <F6>  <Plug>VlsiYank
+        if maparg('<M-F6>','n') ==# ''
+            nmap <M-F6>  <Plug>VlsiYank
         endif
         if maparg('<leader>y','n') ==# ''
             nmap <leader>y <Plug>VlsiYank
@@ -79,8 +79,8 @@ function! vlsi#Bindings()
         endif
     endif
     if !hasmapto('<Plug>VlsiPasteAsInstance') 
-        if maparg('<M-F6>','n') ==# ''
-            nmap <M-F6>  <Plug>VlsiPasteAsInstance
+        if maparg('<F6>','n') ==# ''
+            nmap <F6>  <Plug>VlsiPasteAsInstance
         endif
         "pi as in paste instance
         if maparg('<leader>pi','n') ==# ''
