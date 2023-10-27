@@ -180,26 +180,35 @@ function! vlsi#basicFormat(item, format)
     if type(a:format) == v:t_func
         return a:format(a:item)
     elseif type(a:format) == v:t_string
+        let item   = deepcopy(a:item) " we will change it
+        let item.max_sizes = get(item,'max_sizes',{}) " add 'max_sizes' if needed
         let format = a:format
-        let item   = a:item
-        if has_key(item,'max_sizes')
-            " has max_sizes, reformat fixed size = item.max_sizes.key
-            let keys = []
-            " add any keys to keys
-            call substitute(format, '{\(\w\+\)}', '\=add(keys, submatch(1))', 'g')
-            for key in keys
+
+        let keys = []
+        " harvest any keys to l:keys
+        call substitute(format, '{\(\w\+\)}', '\=add(keys, submatch(1))', 'g')
+        for ckey in keys
+            "ckey is a key with case preserved
+            let key = tolower(ckey)
+
+            if !has_key(item,key)
+                "doesn't have this key, we shouldn't change this
+                let item[ckey] = "{"..ckey.."}"
+            else
                 if has_key(item.max_sizes,key)
+                    "has a max_size => format with padding
                     let l:size = item.max_sizes[key]
                     "left align string of fixed length
                     let l:fmt = printf("%%-%ds",l:size) " %-8s
+                    let l:value = item[key]
+                    let item[key] = printf(l:fmt,l:value) " '23      '
                 else 
-                    let l:size = 0
-                    let l:fmt = "%s"
+                    let item[key] = printf("%s",item[key])
                 endif
-                let l:value = item[key]
-                let item[key] = printf(l:fmt,l:value) " '23      '
-            endfor
-        endif
+                " ensure that {CaSeKey} = {casekey}
+                let item[ckey] = item[key]
+            endif "key doesn't exist
+        endfor
 
         " substitute every occurence of {key} with the value item[key] into str "format"
         return substitute(format,'{\(\w\+\)}','\=item[submatch(1)]','g')
