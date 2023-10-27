@@ -592,6 +592,28 @@ endfunction
 """ generate basic paste functions
 call s:install_test_functions()
 
+""" test that the compilation can fail (foolproof)
+function s:co_vhdl.test_vhdl_compilation_metatest_comp_can_fail()
+    if !s:vcom_ok
+        call self.puts("VCOM not found")
+        return
+    endif
+    if !has_key(self,"tempfilename")
+        call self.puts("tempfilename is not defined!")
+        return
+    endif
+
+    " an instance out of an entity
+    VlsiPasteAsInstance modg2p3
+    wq
+
+    let vcom_output = system('vcom ' .. self.tempfilename)
+
+    call self.assert_not_equal(0,v:shell_error, "Compilation successful despite invalid code")
+
+endfunction
+
+
 """ test the compilation of a VHDL entity
 function s:co_vhdl.test_vhdl_compilation_entity()
     if !s:vcom_ok
@@ -680,6 +702,26 @@ function s:co_verilog.test_verilog_compilation_complex()
     endif
 
 endfunction
+""" test that the compilation can fail (foolproof)
+function s:co_verilog.test_verilog_compilation_metatest_comp_can_fail()
+    if !s:vlog_ok
+        call self.puts("VLOG not found")
+        return
+    endif
+    if !has_key(self,"tempfilename")
+        call self.puts("tempfilename is not defined!")
+        return
+    endif
+
+    " an instance out of an entity
+    VlsiPasteAsInstance modg2p3
+    wq
+
+    let vcom_output = system('vlog ' .. self.tempfilename)
+
+    call self.assert_not_equal(0,v:shell_error, "Compilation successful despite invalid code")
+
+endfunction
 
 " generation and compilation of complex systemverilog
 function s:co_sverilog.test_systemverilog_compilation_complex()
@@ -709,6 +751,27 @@ function s:co_sverilog.test_systemverilog_compilation_complex()
     if v:shell_error != 0
         call self.puts(vcom_output)
     endif
+
+endfunction
+
+""" test that the compilation can fail (foolproof)
+function s:co_sverilog.test_sverilog_compilation_metatest_comp_can_fail()
+    if !s:vlog_ok
+        call self.puts("VLOG not found")
+        return
+    endif
+    if !has_key(self,"tempfilename")
+        call self.puts("tempfilename is not defined!")
+        return
+    endif
+
+    " an instance out of an entity
+    VlsiPasteAsInstance modg2p3
+    wq
+
+    let vcom_output = system('vlog ' .. self.tempfilename)
+
+    call self.assert_not_equal(0,v:shell_error, "Compilation successful despite invalid code")
 
 endfunction
 " vim: :fdm=marker
