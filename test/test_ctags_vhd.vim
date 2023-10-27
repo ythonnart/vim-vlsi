@@ -46,10 +46,15 @@ let s:expected_tags_fields = {
             \ 'mod1port3'      : #{kind:'p', entity:'mod1::ports', signature:' (inout)'},
             \ 'mod1_arch1'     : #{kind:'a', entity:'mod1'},
             \ 'comp1'          : #{kind:'c', architecture:'mod1::mod1_arch1::components'},
+            \ 'arch1type1'     : #{kind:'t', architecture:'mod1::mod1_arch1::types'},
+            \ 'arch1proc1'     : #{kind:'r', architecture:'mod1::mod1_arch1::processes'},
             \ 'arch1sig1'      : #{kind:'s', architecture:'mod1::mod1_arch1::signals'},
             \ 'arch1sig2'      : #{kind:'s', architecture:'mod1::mod1_arch1::signals'},
             \ 'arch1sig3'      : #{kind:'s', architecture:'mod1::mod1_arch1::signals'},
             \ 'u_comp1'        : #{kind:'i', architecture:'mod1::mod1_arch1::instances', signature:' (comp1)'},
+            \ 'modfailport'    : #{kind:'e'},
+            \ 'modfailportok'  : #{kind:'p', entity:'modfailport::ports', signature:' (in)'},
+            \ 'missing_port2'  : #{kind:'p', entity:'modfailport::ports', signature:' (out)'},
 \ }
 " }}}
 """ test functions

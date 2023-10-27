@@ -99,7 +99,9 @@ while($running){
         $scope_body=0;
 
     } elsif (/^\s*type\s*($idregex)\s*is/i) { $name=cleanup($1); $kind='t'; $sig="";
-        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::types$sig\n";
+        my $fullscope="";
+        if ($scope ne "") {$fullscope = "\t$kscope:$scope\::types";}
+        print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line$fullscope$sig\n";
 
     } elsif (/^\s*signal\s*($idregex)\s*:/i) { $name=cleanup($1); $kind='s'; $sig="";
         print "$name\t$file\t/^$address/;\"\tkind:$kind\tfile:\tline:$line\t$kscope:$scope\::signals$sig\n";

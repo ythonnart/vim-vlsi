@@ -19,6 +19,9 @@ entity mod1 is
 end entity;
 
 architecture mod1_arch1 of mod1 is
+    -- TODO this constant is not harvested
+    constant arch1cst1: integer :=0;
+    type arch1type1 is (STATE1,STATE2);
     
    component comp1 is
        generic (
@@ -51,10 +54,20 @@ BEGIN
        );
    -- end instance u_mod1
    
+    arch1proc1: process(mod1port1) is
+    begin
+    end process;
 
 end architecture;
 
 
+-- TODO multiple ports on single line fails to capture all ports
+library ieee;
+use ieee.std_logic_1164.all;
+entity modfailport is  port (
+    modfailportok : in std_logic; missing_port2 : out std_logic;
+);
+end entity;
 
 --------------------------------------------------------------------------------
 -- Crashtest part
