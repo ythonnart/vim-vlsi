@@ -67,6 +67,10 @@ function! s:tc.test_basicFormat_patterns()
     catch 'E716'
         call self.assert(0, "Unknown keys should be left as is (but they throw!)")
     endtry
+
+    let item = #{key1:1, key2:2, max_sizes:#{key2:10}}
+    call self.assert_equal('1', vlsi#basicFormat(item,"{key1}"),"Bad int conversion or wrong padding")
+    call self.assert_equal('2         ', vlsi#basicFormat(item,"{key2}"),"wrong length for padded field key2")
 endfunction
 
 "As a function call
