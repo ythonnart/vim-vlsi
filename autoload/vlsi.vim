@@ -422,7 +422,7 @@ function! vlsi#GenericPaste(patterns, moduleName='', suffix='', prefix='', expan
     " We now add padding to the left of each line that is exactly 
     " the current cursor position
     "construct padding of spaces (with the size of current column)
-    let padding = printf(printf("%%%ds",col('.')-1),'')
+    let padding = printf(printf("%%%ds",col('.')),'')
     " add the padding after each linebreak
     let l:result = substitute(padding .. result, "\x01", "\x01" .. padding, 'g')
     " cleanup unused spaces
