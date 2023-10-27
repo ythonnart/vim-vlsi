@@ -2,14 +2,18 @@
 -- Expected values that match test_ctags_vhd.vim/s:expected_tags_fields
 --------------------------------------------------------------------------------
 
+
+library ieee;
+use ieee.std_logic_1164.all;
+
 entity mod1 is
     generic(
-        mod1gen1 : natural := 1,
+        mod1gen1 : natural := 1;
         mod1gen2 : natural := 2
     );
     port (
-        mod1port1 : in std_logic,
-        mod1port2 : out std_logic,
+        mod1port1 : in std_logic;
+        mod1port2 : out std_logic;
         mod1port3 : inout std_logic
     );
 end entity;
@@ -18,7 +22,7 @@ architecture mod1_arch1 of mod1 is
     
    component comp1 is
        generic (
-           comp1gen1 : natural := 1,;
+           comp1gen1 : natural := 1;
            comp1gen2 : natural := 2
        );
        port (
@@ -37,7 +41,7 @@ BEGIN
     
    u_comp1 : comp1
        generic map (
-           comp1gen1 => 1,,
+           comp1gen1 => 1,
            comp1gen2 => 2
        )
        port map (
@@ -56,22 +60,30 @@ end architecture;
 -- Crashtest part
 --------------------------------------------------------------------------------
 
+library ieee;
+use ieee.std_logic_1164.all;
 -- begin minimal
 entity minimal is
 end entity;
 -- end minimal
 
+library ieee;
+use ieee.std_logic_1164.all;
 -- begin generic1
 entity generic1 is generic (
     param1 : natural := 4);
 end entity;
 -- end generic1
 
+library ieee;
+use ieee.std_logic_1164.all;
 -- begin generic1a
 entity generic1a is generic (param1 : natural := 4);
 end entity;
 -- end generic1a
 
+library ieee;
+use ieee.std_logic_1164.all;
 -- begin generic1b
 entity generic1b is generic (
     param1 : natural := 4
@@ -79,6 +91,8 @@ entity generic1b is generic (
 end entity;
 -- end generic1b
 
+library ieee;
+use ieee.std_logic_1164.all;
 -- begin generics_multi
 entity generics_multi is generic (
     truc : natural := 4;
@@ -138,7 +152,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 -- begin pg1
 entity pg1 is generic (
-    param1 : natural := 4) port (
+    param1 : natural := 4); port (
     port1 : out std_logic
     );
 end entity;
