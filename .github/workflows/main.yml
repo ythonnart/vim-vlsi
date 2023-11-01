@@ -18,8 +18,8 @@ jobs:
       - name: "Install vim"
         run: sudo apt-get install vim
       - name: "Install Pathogen"
-        run: mkdir -p ~/.vim/autoload ~/.vim/bundle && curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim && echo "execute pathogen#infect()" > ~/.vimrc
+        run: mkdir -p ~/.vim/autoload && curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim && echo "execute pathogen#infect()" > ~/.vimrc
       - name: "Link to unittest in vim/bundle"
-        run: ln -s ~/work/vim-unittest/vim-unittest/runtime/vim-unittest ~/.vim/bundle/vim-unittest && ls -l ~/.vim/bundle && ls -l ~/.vim/bundle/vim-unittest && cat ~/.vimrc
+        run: ln -s ln -s $GITHUB_WORKSPACE/runtime/ ~/.vim/bundle && ls -l ~/.vim/bundle && ls -l ~/.vim/bundle/vim-unittest && cat ~/.vimrc
       - name: "UnitTests"
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ALL.vim
