@@ -31,3 +31,7 @@ jobs:
         run: echo "syntax on" >> ~/.vimrc && echo "filetype plugin indent on" >> ~/.vimrc
       - name: "UnitTests CORE"
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_core_functions.vim
+      - name: "UnitTests CTAGS v/sv"
+        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_v_sv.vim
+      - name: "UnitTests CTAGS vhd"
+        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_vhd.vim
