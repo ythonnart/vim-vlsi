@@ -1,7 +1,7 @@
 name: Automated tests for Continuous Integration
 on: [push]
 jobs:
-  run-unit-tests:
+  setup-environment:
     runs-on: ubuntu-latest
     steps:
       - name: "Create runtime path"
@@ -29,6 +29,10 @@ jobs:
         run: echo "au BufNewFile,BufRead *.sv set ft=systemverilog" >> ~/.vimrc
       - name: "Syntax & FileTypes on"
         run: echo "syntax on" >> ~/.vimrc && echo "filetype plugin indent on" >> ~/.vimrc
+  core-tests:
+    runs-on: ubuntu-latest
+    needs: setup-environment
+    steps:
       - name: "UnitTests CORE"
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_core_functions.vim
       - name: "UnitTests CTAGS v/sv"
