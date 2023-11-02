@@ -15,24 +15,8 @@ jobs:
         with:
           repository: laurentalacoque/vim-unittest
           path: runtime/vim-unittest
-      - name: "Install vim"
-        run: sudo apt-get install vim
-      - name: "Install Pathogen"
-        run: mkdir -p ~/.vim ~/.vim/autoload && curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim && echo "execute pathogen#infect()" > ~/.vimrc
-      - name: "Link to runtime from vim/bundle"
-        run: ln -s $GITHUB_WORKSPACE/runtime/ ~/.vim/bundle && ls -l ~/.vim/bundle && ls -l ~/.vim/bundle/vim-unittest && cat ~/.vimrc
-      - name: "FileTypes Verilog"
-        run: echo "au BufNewFile,BufRead *.v set ft=verilog" >> ~/.vimrc
-      - name: "FileTypes VHDL"
-        run: echo "au BufNewFile,BufRead *.vhd set ft=vhdl" >> ~/.vimrc
-      - name: "Filetypes SystemVerilog"
-        run: echo "au BufNewFile,BufRead *.sv set ft=systemverilog" >> ~/.vimrc
-      - name: "Syntax & FileTypes on"
-        run: echo "syntax on" >> ~/.vimrc && echo "filetype plugin indent on" >> ~/.vimrc
-  core-tests:
-    runs-on: ubuntu-latest
-    needs: setup-environment
-    steps:
+      - name: "Install vim and dependencies"
+        run: sudo apt-get install vim && sh $GITHUB_WORKSPACE/runtime/vim-vlsim/.github/ressources/setup_minimal_vim.sh
       - name: "UnitTests CORE"
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_core_functions.vim
       - name: "UnitTests CTAGS v/sv"
