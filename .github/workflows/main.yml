@@ -19,10 +19,9 @@ jobs:
         run: sudo apt-get install vim && sh $GITHUB_WORKSPACE/runtime/vim-vlsim/.github/ressources/setup_minimal_vim.sh
       - name: "UnitTests CORE"
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_core_functions.vim
-        continue-on-error: true
       - name: "UnitTests CTAGS v/sv"
+        if: always()
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_v_sv.vim
-        continue-on-error: true
       - name: "UnitTests CTAGS vhd"
+        if: always()
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_vhd.vim
-        continue-on-error: true
