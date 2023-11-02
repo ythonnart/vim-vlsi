@@ -33,7 +33,7 @@ jobs:
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_v.vim
       - name: "UnitTests YANK sv"
         if: always()
-        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_sv.vim
+        run: timeout -k 1 -s INT 60 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_sv.vim
       - name: "UnitTests PASTE"
         if: always()
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_paste.vim
