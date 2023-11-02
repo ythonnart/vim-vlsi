@@ -1,7 +1,7 @@
 name: Automated tests for Continuous Integration
 on: [push]
 jobs:
-  setup-environment:
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
       - name: "Create runtime path"
@@ -25,3 +25,15 @@ jobs:
       - name: "UnitTests CTAGS vhd"
         if: always()
         run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_vhd.vim
+      - name: "UnitTests YANK vhd"
+        if: always()
+        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_vhd.vim
+      - name: "UnitTests YANK v"
+        if: always()
+        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_v.vim
+      - name: "UnitTests YANK sv"
+        if: always()
+        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_sv.vim
+      - name: "UnitTests PASTE"
+        if: always()
+        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_paste.vim
