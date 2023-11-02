@@ -18,22 +18,22 @@ jobs:
       - name: "Install vim and dependencies"
         run: sudo apt-get install vim && sh $GITHUB_WORKSPACE/runtime/vim-vlsim/.github/ressources/setup_minimal_vim.sh
       - name: "UnitTests CORE"
-        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_core_functions.vim
+        run: timeout -k 1 -s INT 30 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_core_functions.vim
       - name: "UnitTests CTAGS v/sv"
         if: always()
-        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_v_sv.vim
+        run: timeout -k 1 -s INT 30 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_v_sv.vim
       - name: "UnitTests CTAGS vhd"
         if: always()
-        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_vhd.vim
+        run: timeout -k 1 -s INT 30 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_ctags_vhd.vim
       - name: "UnitTests YANK vhd"
         if: always()
-        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_vhd.vim
+        run: timeout -k 1 -s INT 30 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_vhd.vim
       - name: "UnitTests YANK v"
         if: always()
-        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_v.vim
+        run: timeout -k 1 -s INT 30 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_v.vim
       - name: "UnitTests YANK sv"
         if: always()
-        run: timeout -k 1 -s INT 60 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_sv.vim
+        run: timeout -k 1 -s INT 30 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_yank_sv.vim
       - name: "UnitTests PASTE"
         if: always()
-        run: runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_paste.vim
+        run: timeout -k 1 -s INT 30 runtime/vim-unittest/bin/vunit -c none runtime/vim-vlsim/test/test_paste.vim
