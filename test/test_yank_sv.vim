@@ -468,4 +468,54 @@ function! s:tc.test_sv_yank_interface_with_modports()
     call self.assert_yank_interface_equals(l:label, s:wanted)
 endfunction
 " }}}
+"--------------------------------------------------------------------------------
+" YankAll
+"--------------------------------------------------------------------------------
+" {{{ 
+"
+function! s:tc.test_sv_yankall()
+    let  l:command = "VlsiYankAll "..s:here.."/ressources/test_file.sv"
+    execute l:command
+    
+    if self.assert_exists('g:modules', "VlsiYankAll: no module captured")
+        for modname in [
+                    \'minimal',
+                    \'generic1',
+                    \'generic1a',
+                    \'generic1b',
+                    \'generic_special_val',
+                    \'generics_multi',
+                    \'generics_in_body',
+                    \'generics_local_param',
+                    \'port1',
+                    \'port1a',
+                    \'port1b',
+                    \'ports_multi',
+                    \'ports_multi_in_body',
+                    \'porttype1',
+                    \'porttype1a',
+                    \'porttype1b',
+                    \'porttypes_multi',
+                    \'pg1',
+                    \'pg1a',
+                    \'pg1b',
+                    \'pgs_multi',
+                    \'pr1',
+                    \'pdt',
+                    \'pdt1',
+                    \'pdt2',
+                    \]
+            call self.assert_has_key(modname, g:modules, "VlsiYankAll : missing module ".. modname)
+        endfor
+    endif
+
+    if self.assert_exists('g:interfaces', "VlsiYankAll: no interface captured")
+        for ifname in ['if1', 'if1g', 'ifmp1']
+            call self.assert_has_key(ifname, g:interfaces, "VlsiYankAll : missing interface ".. ifname)
+        endfor
+    endif
+
+endfunction
+
+" }}}
 " vim: :fdm=marker

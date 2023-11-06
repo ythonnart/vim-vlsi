@@ -51,6 +51,10 @@ Summary:
 |:VlsiYank|                             Yank the module containing the cursor
                                       default mapping: <F6>, <leader-y>
 
+|:VlsiYankAll|                          Yank all modules/entities/interfaces
+                                      in current buffer or files in argument
+                                      default mapping: <C-M-F6>, <leader-yy>
+
 |:VlsiList|                             Display the available module list
                                       default mapping: not mapped
 
@@ -89,6 +93,17 @@ This command will identify the surrounding module, and parse the required
 information (name, generic parameters, ports), retaining it in the available
 module list.
 |:VlsiYank:| also captures systemverilog interfaces.
+|:VlsiYank| remembers the last entity captured, so any :VlsiPaste* used
+without argument will paste it.
+
+                                                                  *:VlsiYankAll*
+VlsiYankAll performs a |:VlsiYank| on all modules/entities of the current buffer
+or a list of files.
+
+    :VlsiYankAll [{file},[{file},...]]
+
+Note: :VlsiYankAll won't affect the last entity captured. Using VlsiPaste*
+without argument will still paste the last entity captured with |:VlsiYank|
 
                                                                      *:VlsiList*
 To see the available module list, use the following command:
@@ -235,6 +250,7 @@ so you can define your own mappings:
     <Plug>VlsiListInterfaces
     <Plug>VlsiDefineNew
     <Plug>VlsiYank
+    <Plug>VlsiYankAll
     <Plug>VlsiPasteAsDefinition
     <Plug>VlsiPasteAsInterface
     <Plug>VlsiPasteAsInstance
@@ -250,11 +266,12 @@ For more information on using <Plug> mappings, refer to |using-<Plug>|.
 If not conflicting with your own mapping definitions, the following default
 mappings are set for a recognized filetype:
 
-    nmap <F6>   <Plug>VlsiYank
-    nmap <M-S-F6> <Plug>VlsiDefineNew
-    nmap <S-F6>   <Plug>VlsiPasteAsDefinition
-    nmap <C-F6>   <Plug>VlsiPasteAsInterface
-    nmap <M-F6>     <Plug>VlsiPasteAsInstance
+    nmap <M-F6>     <Plug>VlsiYank
+    nmap <C-M-F6>   <Plug>VlsiYankAll
+    nmap <M-S-F6>   <Plug>VlsiDefineNew
+    nmap <S-F6>     <Plug>VlsiPasteAsDefinition
+    nmap <C-F6>     <Plug>VlsiPasteAsInterface
+    nmap <F6>       <Plug>VlsiPasteAsInstance
 
 Note: <M-> means the Alt key,
       <C-> means the Control key,
@@ -343,9 +360,16 @@ Tagbar integration~
 
 3.2 VLSIM global variables                              *vlsim-global-variables*
 
-Global variables are |g:modules| and systemverilog's |g:interfaces| in a generic
-form. They are populated by |:VlsiYank| implementations and used by the
-:VlsiPaste* commands.
+Apart from the  |g:vlsi_vhdl_uppercase| configuration variable described
+above, Global variables are |g:modules| and systemverilog's |g:interfaces| in a
+generic form. They are populated by |:VlsiYank|/|:VlsiYankAll| implementations and 
+used by the :VlsiPaste* commands.
+
+                                                     *g:Vlsi_last_yanked_entity*
+
+The last captured entity or module is stored into the variable
+g:Vlsi_last_yanked_entity. This variable is only altered by successful
+completion of |:VlsiYank| (and not |:VlsiYankAll|)
 
                                                                      *g:modules*
 3.2.1 g:modules variable
@@ -361,7 +385,8 @@ It has the following structure: >
 <
 For each module, the module definition has the following structure: >
         g:modules['module1'] = #{
-            lang: 'vhdl' "file type of the original module yanked
+            lang: 'vhdl', "file type of the original module yanked
+            file: 'rtl/src/file.vhd',
             generics: [ {gen1 def},
                         {gen2 def},
                         ...
@@ -371,7 +396,9 @@ For each module, the module definition has the following structure: >
                         ...
                       ]
             }
-<
+The modules properties 'file' and 'lang' are set to the filename and filetype
+of the buffer from which the module was yanked
+
                                                             *g:modules-generics*
 The generics definition has the following structure: >
     g:modules['module1'].generics[0] = #{
@@ -382,6 +409,7 @@ The port definition has the following structure: >
     g:modules['module1'].ports[0] = #{
         name:'port1', type:'logic', range:'31{{:}}0', dir:'i' }
 <
+
 Where 'range' can be `0` or `'start{{:}}end'`
 and 'dir' can be any of `'i'`, `'o'` or `'io'`
 

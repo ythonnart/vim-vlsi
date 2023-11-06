@@ -112,8 +112,8 @@ function! vlsi#vhdl#Yank() abort
         let g:modules = {}
     endif
     mark z
-    let entbegin = search('\c^\s*\(entity\|component\)','bcnW')
-    let entend   = search('\c^\s*end','cnW')
+    let entbegin = search(b:vlsi_config.entity_regexp.begin,'bcnW')
+    let entend   = search(b:vlsi_config.entity_regexp.end,  'cnW')
     if entbegin == 0 || entend == 0
         echo 'Could not find entity or component around cursor!'
         return
@@ -124,7 +124,7 @@ function! vlsi#vhdl#Yank() abort
         return
     endif
     let modname = linelist[2]
-    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language }
+    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language, file: expand(bufname('')) }
     let kind = -1
     for curline in getline(entbegin, entend)
         "get rid of comments

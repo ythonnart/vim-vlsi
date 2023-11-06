@@ -139,7 +139,7 @@ function! vlsi#v_sv#YankInterface() abort
     endif
     " Add interface skeleton
     let g:interfaces[ifname] = { 'generics' : [], 'ports' : [] , 'ports_by_name' : {},
-                \ 'modports' : {}, 'lang':'systemverilog'}
+                \ 'modports' : {}, 'lang':'systemverilog', 'file': expand(bufname('')) }
 
     " scope kind
     let kind = -1
@@ -254,7 +254,7 @@ function! vlsi#v_sv#Yank() abort
     endif
     mark z
     let modbegin = search('\c^\s*\(module\)','bcnW')
-    let modend   = search('\c^\s*endmodule','cnW')
+    let modend   = search('\c^\s*endmodule' ,'cnW')
     if modbegin == 0 || modend == 0
         " No module around cursor, look for interface
         if vlsi#v_sv#YankInterface()
@@ -273,7 +273,7 @@ function! vlsi#v_sv#Yank() abort
     let modname = linelist[2]
     "Found module between modbegin and modend with name modname
     " Add module skeleton
-    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language }
+    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language, 'file': expand(bufname('')) }
 
     " scope kind
     let kind = -1

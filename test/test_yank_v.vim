@@ -284,5 +284,41 @@ function! s:tc.test_v_yank_port_default_type_all_ports_on_same_line()
 endfunction
 
 " }}}
+"--------------------------------------------------------------------------------
+" YankAll
+"--------------------------------------------------------------------------------
+" {{{ 
+"
+function! s:tc.test_v_yankall()
+    let  l:command = "VlsiYankAll "..s:here.."/ressources/test_file.v"
+    execute l:command
+    
+    if self.assert_exists('g:modules', "VlsiYankAll: no module captured")
+        for modname in [
+                    \'minimal',
+                    \'generic1',
+                    \'generic1a',
+                    \'generic1b',
+                    \'generics_multi',
+                    \'port1',
+                    \'port1a',
+                    \'port1b',
+                    \'ports_multi',
+                    \'pg1',
+                    \'pg1a',
+                    \'pg1b',
+                    \'pgs_multi',
+                    \'pr1',
+                    \'pdt',
+                    \'pdt1',
+                    \'pdt2',
+                    \]
+            call self.assert_has_key(modname, g:modules, "VlsiYankAll : missing module ".. modname)
+        endfor
+    endif
+
+endfunction
+
+" }}}
 
 " vim: :fdm=marker

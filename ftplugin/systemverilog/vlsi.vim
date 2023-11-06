@@ -8,6 +8,8 @@ let b:vlsi_config           = #{
             \ comment : "//",
             \ default_scalar_type:'logic',
             \ default_vector_type:'logic',
+            \ entity_regexp       : #{begin:'\c^\s*\(module\|interface\)',
+            \                         end  :'\c^\s*\(endmodule\|endinterface\)'},
             \ kind2dir : #{i:'input', o:'output', io:'inout'},
             \ formatRange:function("vlsi#v_sv#formatRange")}
 

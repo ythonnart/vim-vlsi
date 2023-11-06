@@ -9,6 +9,7 @@ let b:vlsi_config           = #{
             \ comment : "--",
             \ default_scalar_type:'std_logic',
             \ default_vector_type:'std_logic_vector',
+            \ entity_regexp       : #{begin:'\c^\s*\(entity\|component\)', end:'\c^\s*end'},
             \ kind2dir : #{i:'in', o:'out', io:'inout'},
             \ formatRange:function("vlsi#vhdl#formatRange")}
 " Create default bindings

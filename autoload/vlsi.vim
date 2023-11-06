@@ -23,10 +23,11 @@ function! vlsi#Bindings()
     endif
 
     " Command-line mode
-    command! -nargs=0 VlsiYank                                                    :call b:VlsiYank()
-    command! -nargs=? VlsiList                                                    :echo join(vlsi#ListModules('<args>','',''),' ')
-    command! -nargs=? VlsiListInterfaces                                          :echo join(vlsi#ListInterfaces('<args>','',''),' ')
-    command! -nargs=0 VlsiDefineNew                                               :call vlsi#DefineNew()
+    command! -nargs=0                                       VlsiYank              :call b:VlsiYank()
+    command! -nargs=* -complete=file                        VlsiYankAll           :call vlsi#YankAll(<f-args>)
+    command! -nargs=?                                       VlsiList              :echo join(vlsi#ListModules('<args>','',''),' ')
+    command! -nargs=?                                       VlsiListInterfaces    :echo join(vlsi#ListInterfaces('<args>','',''),' ')
+    command! -nargs=0                                       VlsiDefineNew         :call vlsi#DefineNew()
     command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteAsDefinition :call b:VlsiPasteAsDefinition(<f-args>)
     command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteAsInterface  :call b:VlsiPasteAsInterface(<f-args>)
     command! -nargs=* -complete=customlist,vlsi#ListModules VlsiPasteAsInstance   :call b:VlsiPasteAsInstance(<f-args>)
@@ -34,6 +35,7 @@ function! vlsi#Bindings()
 
     " <Plug> Mappings
     noremap <silent> <Plug>VlsiYank              :call b:VlsiYank                ()<CR>
+    noremap <silent> <Plug>VlsiYankAll           :call b:VlsiYankAll             ()<CR>
     noremap <silent> <Plug>VlsiList              :echo join(vlsi#ListModules     ('<args>','',''),' ')<CR>
     noremap <silent> <Plug>VlsiListInterface     :echo join(vlsi#ListInterfaces  ('<args>','',''),' ')<CR>
     noremap <silent> <Plug>VlsiDefineNew         :call vlsi#DefineNew            ()<CR>
@@ -53,6 +55,15 @@ function! vlsi#Bindings()
         endif
         if maparg('<leader>y','n') ==# ''
             nmap <leader>y <Plug>VlsiYank
+        endif
+    endif
+
+    if !hasmapto('<Plug>VlsiYankAll') 
+        if maparg('<C-M-F6>','n') ==# ''
+            nmap <C-M-F6>  <Plug>VlsiYankAll
+        endif
+        if maparg('<leader>yy','n') ==# ''
+            nmap <leader>yy <Plug>VlsiYankAll
         endif
     endif
 
@@ -126,7 +137,7 @@ function! vlsi#DefineNew() abort
             return
         endif
     endif
-    let g:modules[modname] = { 'generics' : [], 'ports' : [] }
+    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang'='',  'file'=''}
     let name = input('New generic parameter name (leave empty if no more): ')
     while name != ''
         let type = input('Generic parameter type: ', 'natural')
@@ -148,6 +159,101 @@ function! vlsi#DefineNew() abort
         let name = input('New port name (leave empty if no more): ')
     endwhile
     echo '    Capture for module ' . modname . ' successful!'
+endfunction
+
+"Yank all modules inside current buffer or list of files
+function! vlsi#YankAll(...)
+
+    "set list of files to be yanked
+    let l:file_list = copy(a:000)
+    if len(l:file_list) == 0
+        " No argument, add current buffer to file list
+        let l:file_list += [bufname('')]
+    endif
+    " remember g:Vlsi_last_yanked_entity to restore it at the end
+    if exists('g:Vlsi_last_yanked_entity')
+        let l:saved_last_yanked_entity = g:Vlsi_last_yanked_entity
+    else
+        let l:saved_last_yanked_entity = v:none
+    endif
+
+    "iterate over files
+    for data_file in file_list
+        " expand funny things like '%', '~/', ...
+        let data_file = expand(data_file)
+
+        " load the buffer if needed and attribute it to a window
+        " remember if we use 'split' and 'edit'
+        let I_splitted = 0
+        let I_loaded   = 0
+        if !bufexists(expand(data_file))
+            " The buffer doesn't exist. load it
+            split
+            let I_loaded = 1
+            echomsg "VlsiYankAll: loading " .. data_file
+            hide edit `=data_file`
+        elseif bufwinnr(data_file) != -1
+            " The buffer exists, and it has a window.
+            execute bufwinnr(data_file) 'wincmd w'
+        else
+            " The buffer exists, but it has no window.
+            split
+            let I_splitted = 1
+            execute 'buffer' bufnr(data_file)
+        endif
+
+        " Buffer opened and loaded into a window
+        " Check if the buffer has the yank function
+        if !exists('b:VlsiYank')
+            "Hu Ho, this buffer can't yank, skip it
+            echohl WarningMsg | echo "Invalid file for VlsiYankAll: " .. data_file | echohl None
+        else
+            "Buffer loaded and ready to yank
+            try
+                "load start and end patterns for this file
+                let entbegin = b:vlsi_config.entity_regexp.begin
+                let entend   = b:vlsi_config.entity_regexp.end
+
+                "move to the start of buffer
+                normal! gg
+                "find the next entity
+                while search(entbegin, 'cW')
+                    " Yank entity just found
+                    VlsiYank
+                    " move to the end of entity
+                    call search(entend, 'cW')
+                endwhile
+
+            catch 'E121\|E716'
+                "E121 : vlsi_config doesn't exist
+                "E716 : invalid key
+                echohl Error | echo "Missing configuration b:vlsi_config.entity_regexp for buffer, " ..
+                            \ "check ftplugin" | echohl None
+            endtry
+        endif
+
+        " housekeeping
+        if I_splitted
+            "close window
+            close!
+        endif
+        if I_loaded
+            "unload buffer (and close split)
+            bdelete!
+        endif
+
+        "restore Vlsi_last_yanked_entity (if needed)
+        if l:saved_last_yanked_entity == v:none
+            "was not defined, unlet if it exits
+            if exists('g:Vlsi_last_yanked_entity')
+                unlet g:Vlsi_last_yanked_entity
+            endif
+        else
+            "preexisting, restore the value
+            let g:Vlsi_last_yanked_entity = l:saved_last_yanked_entity
+        endif
+
+    endfor "file list
 endfunction
 
 " Default function fallbacks when not defined for filetype
