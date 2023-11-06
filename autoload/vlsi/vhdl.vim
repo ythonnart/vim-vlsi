@@ -124,7 +124,7 @@ function! vlsi#vhdl#Yank() abort
         return
     endif
     let modname = linelist[2]
-    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language, file: expand(bufname('')) }
+    let g:modules[modname] = { 'generics' : [], 'ports' : [], 'lang' : b:vlsi_config.language, 'file': expand(bufname('')) }
     let kind = -1
     for curline in getline(entbegin, entend)
         "get rid of comments
