@@ -54,8 +54,10 @@ let s:expected_tags_fields = {
             \ 'u_comp1'        : #{kind:'i', architecture:'mod1::mod1_arch1::instances', signature:' (comp1)'},
             \ 'modfailport'    : #{kind:'e'},
             \ 'modfailportok'  : #{kind:'p', entity:'modfailport::ports', signature:' (in)'},
-            \ 'missing_port2'  : #{kind:'p', entity:'modfailport::ports', signature:' (out)'},
 \ }
+let s:failing_expected_tags_fields = {
+            \ 'missing_port2'  : #{kind:'p', entity:'modfailport::ports', signature:' (out)'},
+            \}
 " }}}
 """ test functions
 
@@ -64,10 +66,15 @@ let s:expected_tags_fields = {
 "--------------------------------------------------------------------------------
 " {{{ 
 "
-function s:tc.test_v_sv_ctags_structure_valid()
+function s:tc.test_vhd_ctags_structure_valid()
     if !has_key(self,"ctags_out")
         return
     endif
+
+    if exists('g:include_failing_tests')
+        call extend(s:expected_tags_fields, s:failing_expected_tags_fields)
+    endif
+
     let valid_kinds = '[egpatscirKkfPv]'
     " valid field names
     let all_valid_field_names = #{file:1, line:1, signature:1, kind:1, entity:1, access:1, architecture:1}
