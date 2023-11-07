@@ -1,6 +1,0 @@
-execute pathogen#infect()
-au BufNewFile,BufRead *.v set ft=verilog
-au BufNewFile,BufRead *.vhd set ft=vhdl
-au BufNewFile,BufRead *.sv set ft=systemverilog
-syntax on
-filetype plugin indent on
